@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AutoDA | Automation Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body>
+    <header class="landing-header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='img/autoda-logo.svg') }}" alt="AutoDA logo">
+            <span>AutoDA</span>
+        </div>
+        <nav>
+            <a href="#hero">Home</a>
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+            <a href="#workflow">How it works</a>
+            <a href="#contact">Contact</a>
+        </nav>
+        <div class="cta-group">
+            {% if session.user_email %}
+                <span class="user-pill">Hi, {{ session.user_name or session.user_email }}</span>
+                <button type="button" class="primary primary--solid" onclick="window.location.href='{{ url_for('main.workflow') }}'">Open dashboard</button>
+                <form action="{{ url_for('main.logout') }}" method="post">
+                    <button type="submit" class="ghost ghost--outline">Sign out</button>
+                </form>
+            {% else %}
+                <button type="button" class="ghost ghost--outline" onclick="window.location.href='{{ url_for('main.signin') }}'">Login</button>
+                <button type="button" class="primary primary--solid" onclick="window.location.href='{{ url_for('main.signup') }}'">Sign Up</button>
+            {% endif %}
+        </div>
+    </header>
+
+    <section id="hero" class="hero parallax">
+        <div class="hero__copy">
+            <p class="badge badge--soft">Automation platform</p>
+            <h1>Drop data. Get clarity.</h1>
+            <p>
+                AutoDA unifies structured analytics, NLP pipelines, and web scraping inside a sleek automation studio.
+                Build, explain, and share insights faster than ever with premium-grade workflows.
+            </p>
+            <div class="hero__cta">
+                <a class="primary primary--solid" href="{{ url_for('main.signup') }}">Create an account</a>
+                <a class="ghost ghost--outline" href="{{ url_for('main.workflow') }}">Launch dashboard</a>
+            </div>
+        </div>
+        <div class="hero__buttons">
+            <a class="hero-card" href="{{ url_for('main.workflow') }}">
+                <span class="hero-icon">📊</span>
+                <div>
+                    <h3>Numeric Data Workflow</h3>
+                    <p>Upload CSV/Excel files, auto-clean, engineer, and train baseline models within minutes.</p>
+                    <button class="ghost">Launch Data Pipeline</button>
+                </div>
+            </a>
+            <a class="hero-card" href="{{ url_for('nlp.automation') }}">
+                <span class="hero-icon">📝</span>
+                <div>
+                    <h3>Text NLP Workflow</h3>
+                    <p>Clean, tokenize, lemmatize, and analyze text with 20+ preprocessing toggles and explainability.</p>
+                    <button class="ghost">Start NLP Pipeline</button>
+                </div>
+            </a>
+            <a class="hero-card" href="{{ url_for('main.web_scraper') }}">
+                <span class="hero-icon">🌐</span>
+                <div>
+                    <h3>Web Scraper</h3>
+                    <p>Extract structured insights from websites and APIs with intelligent scraping and parsing.</p>
+                    <button class="ghost">Open Web Scraper</button>
+                </div>
+            </a>
+            <a class="hero-card" href="{{ image_hub_link or url_for('main.workflow') ~ '#image-hub' }}">
+                <span class="hero-icon">🖼️</span>
+                <div>
+                    <h3>Image Processing Hub</h3>
+                    <p>Batch upload visuals, chain advanced preprocessing, preview edits, and export optimized assets.</p>
+                    <button class="ghost">Explore Image Hub</button>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <section id="features" class="feature-grid">
+        <article>
+            <span>📊</span>
+            <h3>Structured Data Pipeline</h3>
+            <p>Automated profiling, cleaning, feature engineering, Auto Mode, and leaderboard scoring.</p>
+            <a href="{{ url_for('main.workflow') }}">Launch Data Pipeline →</a>
+        </article>
+        <article>
+            <span>📝</span>
+            <h3>NLP Studio</h3>
+            <p>20+ preprocessing toggles, vectorization, sentiment, clustering, and explainability.</p>
+            <a href="{{ url_for('nlp.automation') }}">Start NLP Pipeline →</a>
+        </article>
+        <article>
+            <span>🌐</span>
+            <h3>Web Data Extraction</h3>
+            <p>Intelligent scraping with optional API headers, summary generation, and exportable briefs.</p>
+            <a href="{{ url_for('main.web_scraper') }}">Open Web Scraper →</a>
+        </article>
+        <article>
+            <span>🖼️</span>
+            <h3>Image Processing Hub</h3>
+            <p>Drag-and-drop batch processing with 50+ filters, diagnostics, and ZIP-ready downloads.</p>
+            <a href="{{ image_hub_link or url_for('main.workflow') ~ '#image-hub' }}">Open Image Hub →</a>
+        </article>
+    </section>
+
+    <section class="stats">
+        <div class="stat" data-target="1200">
+            <span class="stat-value">0</span>
+            <p>Datasets processed</p>
+        </div>
+        <div class="stat" data-target="48">
+            <span class="stat-value">0</span>
+            <p>Hours saved per project</p>
+        </div>
+        <div class="stat" data-target="92">
+            <span class="stat-value">0</span>
+            <p>% accuracy boost</p>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div>
+            <h2>About AutoDA</h2>
+            <p>
+                AutoDA blends automation with explainability. Every step—from ingestion to reporting—is versioned,
+                auditable, and shareable. Teams switch between structured, text, and web workflows without leaving
+                the platform.
+            </p>
+        </div>
+        <ul>
+            <li><strong>Tech Stack:</strong> Flask, Pandas, scikit-learn, Plotly, NLTK, BeautifulSoup.</li>
+            <li><strong>Use Cases:</strong> Operational analytics, product feedback loops, research automation.</li>
+            <li><strong>Benefits:</strong> Consistent preprocessing, Auto Mode, instant reporting, audit-ready artifacts.</li>
+        </ul>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="contact__intro">
+            {% if not session.user_email %}
+                <h2>Ready to supercharge your analytics?</h2>
+                <p>Sign up to unlock all three workflows or drop us a line for a guided walkthrough.</p>
+                <div class="contact__cta">
+                    <a class="primary primary--solid" href="{{ url_for('main.signup') }}">Create an account</a>
+                    <a class="ghost ghost--outline" href="{{ url_for('main.signin') }}">I'm already a member</a>
+                </div>
+            {% else %}
+                <h2>All set, {{ session.user_name or session.user_email }}!</h2>
+                <p>Have a question or want to invite the team? Send us a note and we'll respond quickly.</p>
+                <div class="contact__cta">
+                    <a class="primary primary--solid" href="{{ url_for('main.workflow') }}">Open dashboard</a>
+                    <a class="ghost ghost--outline" href="{{ url_for('main.projects') }}">Manage projects</a>
+                </div>
+            {% endif %}
+        </div>
+        <form class="contact-form" action="{{ url_for('main.contact_submit') }}" method="post">
+            <input type="hidden" name="redirect_to" value="{{ request.path }}#contact">
+            <label>
+                <span>Your Name</span>
+                <input type="text" name="name" placeholder="Jane Analyst" value="{{ session.user_name or '' }}">
+            </label>
+            <label>
+                <span>Your Email</span>
+                <input type="email" name="email" placeholder="you@example.com" value="{{ session.user_email or '' }}" required>
+            </label>
+            <label>
+                <span>Subject</span>
+                <input type="text" name="subject" placeholder="How can we help?">
+            </label>
+            <label class="contact-form__message">
+                <span>Your Message</span>
+                <textarea name="message" rows="4" placeholder="Share a little detail so we can respond faster." required></textarea>
+            </label>
+            <button type="submit" class="primary primary--solid contact-form__submit">Send Message</button>
+        </form>
+    </section>
+
+    <footer class="landing-footer">
+        <div class="logo">AutoDA</div>
+        <div class="footer-links">
+            <a href="{{ url_for('main.signin') }}">Login</a>
+            <a href="{{ url_for('main.signup') }}">Sign Up</a>
+            <a href="{{ url_for('main.workflow') }}">Data Pipeline</a>
+            <a href="{{ url_for('nlp.automation') }}">NLP Pipeline</a>
+            <a href="{{ url_for('main.web_scraper') }}">Web Scraper</a>
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+            <a href="#">Documentation</a>
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+        <p>© 2024 AutoDA. Data + Vision automation studio.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/landing.js') }}" defer></script>
+</body>
+</html>
+

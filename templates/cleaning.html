@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set summary = page.preprocessing %}
+
+<div class="cleaning-grid">
+    {% if page.cleaning %}
+    <section class="cleaning-metrics">
+        <h2>Cleaning summary</h2>
+        <ul class="pill-list">
+            {% if summary %}
+                <li>Rows before cleaning: {{ summary.rows_initial }}</li>
+                <li>Rows after cleaning: {{ summary.rows_cleaned }}</li>
+                <li>Rows removed: {{ summary.rows_removed }}</li>
+            {% endif %}
+            <li>Duplicates removed: {{ page.cleaning.metrics.duplicates_removed }}</li>
+            <li>Missing filled: {{ page.cleaning.metrics.missing_filled }}</li>
+            <li>Outliers handled: {{ page.cleaning.metrics.outliers_handled }}</li>
+            <li>Type conversions: {{ page.cleaning.metrics.type_conversions }}</li>
+        </ul>
+        <p>Data Quality Score: {{ page.cleaning.quality_score }}</p>
+    </section>
+    {% endif %}
+
+    {% if summary %}
+    <section class="preprocess-summary">
+        <h2>Preprocessing overview</h2>
+        <ul class="pill-list pill-list--stacked">
+            <li>Encoded features: {{ summary.encoding.encoded_features }}</li>
+            <li>New features introduced: {{ summary.encoding.new_features }}</li>
+            <li>Train rows: {{ summary.split.train_rows }}</li>
+            <li>Test rows: {{ summary.split.test_rows }}</li>
+        </ul>
+        {% set artifacts = summary.artifacts %}
+        <div class="action-row action-row--spaced">
+            {% if artifacts.cleaned %}
+                <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.cleaned) }}">
+                    Cleaned CSV
+                </a>
+            {% endif %}
+            {% if artifacts.encoded %}
+                <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.encoded) }}">
+                    Encoded CSV
+                </a>
+            {% endif %}
+            {% if artifacts.train %}
+                <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.train) }}">
+                    Train split
+                </a>
+            {% endif %}
+            {% if artifacts.test %}
+                <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.test) }}">
+                    Test split
+                </a>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+{% if summary %}
+
+{% if summary.preview %}
+<section class="data-preview card">
+    <h2>Cleaned data preview</h2>
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% for column in summary.preview_columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in summary.preview %}
+                    <tr>
+                        {% for column in summary.preview_columns %}
+                            <td>{{ row[column] }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+<div class="cleaning-grid">
+<section class="encoding-summary">
+    <h2>Feature encoding</h2>
+    {% set cat_cols = summary.encoding.categorical_columns %}
+    {% if cat_cols %}
+        <p>Encoded {{ cat_cols|length }} categorical column{% if cat_cols|length != 1 %}s{% endif %} with one-hot expansion.</p>
+        <ul>
+            {% for col in cat_cols[:10] %}
+                <li>{{ col }}</li>
+            {% endfor %}
+        </ul>
+        {% if cat_cols|length > 10 %}
+            <p class="muted">+ {{ cat_cols|length - 10 }} more</p>
+        {% endif %}
+    {% else %}
+        <p>No categorical features required encoding.</p>
+    {% endif %}
+</section>
+
+<section class="scaling-summary">
+    <h2>Feature scaling</h2>
+    {% set scaling = summary.scaling %}
+    {% if scaling.applied %}
+        <p>{{ scaling.columns|length }} numeric feature{% if scaling.columns|length != 1 %}s{% endif %} scaled with {{ scaling.scaler }}.</p>
+        <ul>
+            {% for col in scaling.columns[:10] %}
+                <li>{{ col }}</li>
+            {% endfor %}
+        </ul>
+        {% if scaling.columns|length > 10 %}
+            <p class="muted">+ {{ scaling.columns|length - 10 }} more</p>
+        {% endif %}
+    {% else %}
+        <p>No numeric features required scaling.</p>
+    {% endif %}
+</section>
+</div>
+
+<section class="split-summary">
+    <h2>Train / test split</h2>
+    <ul class="pill-list">
+        <li>Train rows: {{ summary.split.train_rows }}</li>
+        <li>Test rows: {{ summary.split.test_rows }}</li>
+        <li>Test ratio: {{ (summary.split.test_ratio * 100) | round(1) }}%</li>
+        <li>Target column: {{ summary.split.target or "Not set" }}</li>
+    </ul>
+    <p>{{ summary.split.strategy }}</p>
+    {% if summary.split.note %}
+        <p class="muted">{{ summary.split.note }}</p>
+    {% endif %}
+</section>
+
+<section class="imbalance-summary">
+    <h2>Imbalanced data handling</h2>
+    {% set imbalance = summary.imbalance %}
+    <p>{{ imbalance.strategy }}</p>
+    {% if imbalance.handled and ('before' in imbalance) and ('after' in imbalance) %}
+        <div class="grid-two">
+            <article>
+                <h3>Before</h3>
+                <ul>
+                    {% for cls, pct in imbalance.before.items() %}
+                        <li>{{ cls }}: {{ pct }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+            <article>
+                <h3>After</h3>
+                <ul>
+                    {% for cls, pct in imbalance.after.items() %}
+                        <li>{{ cls }}: {{ pct }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+        </div>
+    {% elif 'before' in imbalance %}
+        <h3>Class distribution</h3>
+        <ul>
+            {% for cls, pct in imbalance.before.items() %}
+                <li>{{ cls }}: {{ pct }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</section>
+{% else %}
+<section class="preprocess-summary">
+    <p>Run preprocessing on the ingestion page to generate cleaning details, feature encoding, splits, and downloadable artifacts.</p>
+</section>
+{% endif %}
+{% endblock %}

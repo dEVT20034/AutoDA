@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="report-actions">
+    <form action="{{ url_for('main.generate_report') }}" method="post" class="inline-form" target="_blank">
+        <button type="submit" class="primary">Generate PDF Report</button>
+    </form>
+    {% if page.reports %}
+        <div class="meta">
+            <span>Last generated: {{ page.reports.generated_at }}</span>
+            <span>Target: {{ page.reports.target }}</span>
+        </div>
+    {% endif %}
+</section>
+
+{% if page.reports %}
+<section class="report-summary">
+    <h2>Executive Summary</h2>
+    <p>{{ page.reports.executive_summary }}</p>
+</section>
+
+{% for section in page.reports.sections %}
+<section class="report-section" id="section-{{ loop.index }}">
+    <h3>{{ section.title }}</h3>
+    <ul>
+        {% for bullet in section.bullets %}
+            <li>{{ bullet }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endfor %}
+
+<section class="report-downloads">
+    <h2>Downloads</h2>
+{% set report_artifacts = [] %}
+{% for artifact in artifacts %}
+    {% if artifact.type == 'Report' %}
+        {% set report_artifacts = report_artifacts + [artifact] %}
+    {% endif %}
+{% endfor %}
+    {% if report_artifacts %}
+        <div class="action-buttons">
+            {% for artifact in report_artifacts %}
+                <a class="primary" href="{{ url_for('main.download_artifact', artifact_id=artifact.id) }}">{{ artifact.name }}</a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No report artifacts yet. Generate a PDF to unlock downloads.</p>
+    {% endif %}
+</section>
+{% else %}
+<section class="report-placeholder">
+    <h2>No Report Yet</h2>
+    <p>Run Auto Mode or complete the manual steps, then use the button above to assemble a comprehensive analytics report.</p>
+</section>
+{% endif %}
+{% endblock %}

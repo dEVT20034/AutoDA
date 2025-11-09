@@ -1,0 +1,20 @@
+{% extends "auth_base.html" %}
+{% set title = "Sign In" %}
+{% set subtitle = "Access your AutoDA workspace and resume analysis." %}
+
+{% block content %}
+<form method="post" class="auth-form">
+    <label>
+        Email
+        <input type="email" name="email" placeholder="you@example.com" required>
+    </label>
+    <label>
+        Password
+        <input type="password" name="password" placeholder="Your password" required>
+    </label>
+    <div class="auth-actions">
+        <button type="submit" class="primary">Sign in</button>
+        <a href="{{ url_for('main.signup') }}" class="ghost">Create an account</a>
+    </div>
+</form>
+{% endblock %}

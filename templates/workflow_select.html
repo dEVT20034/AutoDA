@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AutoDA | Automation Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-container flash-container--landing">
+            {% for category, message in messages %}
+                <div class="flash flash--{{ category or 'info' }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<header class="landing-header">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='img/autoda-logo.svg') }}" alt="AutoDA logo">
+        <span>AutoDA</span>
+    </div>
+    <nav>
+        <a href="#hero">Home</a>
+        <a href="#features">Features</a>
+        <a href="#workflow">How it works</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+    </nav>
+    <div class="cta-group">
+        {% if session.user_email %}
+            <span class="user-pill">Hi, {{ session.user_name or session.user_email }}</span>
+            <button type="button" class="primary primary--solid" onclick="window.location.href='{{ url_for('main.workflow') }}'">Open dashboard</button>
+            <form action="{{ url_for('main.logout') }}" method="post">
+                <button type="submit" class="ghost ghost--outline">Sign out</button>
+            </form>
+        {% else %}
+            <button type="button" class="ghost ghost--outline" onclick="window.location.href='{{ url_for('main.signin') }}'">Login</button>
+            <button type="button" class="primary primary--solid" onclick="window.location.href='{{ url_for('main.signup') }}'">Sign Up</button>
+        {% endif %}
+    </div>
+</header>
+
+<section id="hero" class="hero parallax">
+    <div class="hero__copy">
+        <p class="badge badge--soft">Automation hub</p>
+        <h1>Automation for every dataset.</h1>
+        <p>
+            AutoDA blends structured analytics, NLP pipelines, and web scraping into a single premium studio.
+            Choose a workflow, hit Auto Mode, and share explainable output in minutes.
+        </p>
+        <div class="hero__cta">
+            <a class="primary primary--solid" href="{{ url_for('main.projects') }}">Create new project</a>
+            <a class="ghost ghost--outline" href="{{ url_for('main.projects') }}">View all projects</a>
+        </div>
+    </div>
+    <div class="hero__buttons">
+        <a class="hero-card" href="{{ auto_link }}">
+            <span class="hero-icon">📊</span>
+            <div>
+                <h3>Numeric Data Workflow</h3>
+                <p>Upload CSV/Excel, auto-clean, engineer features, and train baselines.</p>
+                <button class="ghost">Launch Data Pipeline</button>
+            </div>
+        </a>
+        <a class="hero-card" href="{{ nlp_link }}">
+            <span class="hero-icon">📝</span>
+            <div>
+                <h3>Text NLP Workflow</h3>
+                <p>Clean, tokenize, lemmatize, and analyze sentiment with explainability.</p>
+                <button class="ghost">Start NLP Pipeline</button>
+            </div>
+        </a>
+        <a class="hero-card" href="{{ url_for('main.web_scraper') }}">
+            <span class="hero-icon">🌐</span>
+            <div>
+                <h3>Web Scraper</h3>
+                <p>Extract data from the web with optional API headers and instant summaries.</p>
+                <button class="ghost">Open Web Scraper</button>
+            </div>
+        </a>
+        <a class="hero-card" href="{{ image_hub_link }}">
+            <span class="hero-icon">🖼️</span>
+            <div>
+                <h3>Image Processing Hub</h3>
+                <p>Batch upload visuals, chain advanced preprocessing, preview edits, and export optimized assets.</p>
+                <button class="ghost">Open Image Hub</button>
+            </div>
+        </a>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stat" data-target="1500">
+        <span class="stat-value">0</span>
+        <p>Datasets processed</p>
+    </div>
+    <div class="stat" data-target="54">
+        <span class="stat-value">0</span>
+        <p>Hours saved per project</p>
+    </div>
+    <div class="stat" data-target="96">
+        <span class="stat-value">0</span>
+        <p>% accuracy lift</p>
+    </div>
+</section>
+
+<section id="about" class="about">
+    <div class="about__card">
+        <div class="about__grid">
+            <div class="about__blurb">
+                <h2>About AutoDA</h2>
+                <p>
+                    AutoDA is a data automation platform combining structured workflows, NLP automation, and research-ready web scraping.
+                    Every step is audited, explainable, and versioned for collaboration.
+                </p>
+            </div>
+            <ul class="about__highlights">
+                <li><strong>Key capabilities:</strong> Auto Mode pipelines, explainable leaderboards, artifact management.</li>
+                <li><strong>Tech stack:</strong> Flask, Pandas, scikit-learn, Plotly, NLTK, BeautifulSoup.</li>
+                <li><strong>Use cases:</strong> Ops analytics, customer feedback, product research, compliance reporting.</li>
+                <li><strong>Benefits:</strong> Faster time-to-insight, reproducible outputs, privacy-aware orchestration.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section id="contact" class="contact">
+    <div class="contact__intro">
+        {% if not session.user_email %}
+            <h2>Ready to supercharge your analytics?</h2>
+            <p>Sign up to unlock all four workflows or contact us for a guided tour.</p>
+            <div class="contact__cta">
+                <a class="primary primary--solid" href="{{ url_for('main.signup') }}">Sign up now</a>
+                <a class="ghost ghost--outline" href="{{ url_for('main.signin') }}">I'm already a member</a>
+            </div>
+        {% else %}
+            <h2>Welcome back{{ ' ' + session.user_name if session.user_name else '' }}!</h2>
+            <p>Jump straight into your automation workspace or invite teammates.</p>
+            <div class="contact__cta">
+                <a class="primary primary--solid" href="{{ url_for('main.workflow') }}">Go to dashboard</a>
+                <a class="ghost ghost--outline" href="{{ url_for('main.projects') }}">View projects</a>
+            </div>
+        {% endif %}
+    </div>
+    <form class="contact-form" action="{{ url_for('main.contact_submit') }}" method="post">
+        <input type="hidden" name="redirect_to" value="{{ request.path }}#contact">
+        <label>
+            <span>Your Name</span>
+            <input type="text" name="name" placeholder="Jane Analyst" value="{{ session.user_name or '' }}">
+        </label>
+        <label>
+            <span>Your Email</span>
+            <input type="email" name="email" placeholder="you@example.com" value="{{ session.user_email or '' }}" required>
+        </label>
+        <label>
+            <span>Subject</span>
+            <input type="text" name="subject" placeholder="Workflow question or demo request">
+        </label>
+        <label class="contact-form__message">
+            <span>Your Message</span>
+            <textarea name="message" rows="4" placeholder="Tell us more about your use case." required></textarea>
+        </label>
+        <button type="submit" class="primary primary--solid contact-form__submit">Send Message</button>
+    </form>
+</section>
+
+<footer class="landing-footer">
+    <div class="logo">AutoDA</div>
+    <div class="footer-links">
+        <a href="{{ url_for('main.signin') }}">Login</a>
+        <a href="{{ url_for('main.signup') }}">Sign Up</a>
+        <a href="{{ auto_link }}">Data Pipeline</a>
+        <a href="{{ nlp_link }}">NLP Pipeline</a>
+        <a href="{{ url_for('main.web_scraper') }}">Web Scraper</a>
+        <a href="#features">Features</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a href="#">Documentation</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+    </div>
+    <p>© 2024 AutoDA. Data + Vision automation studio.</p>
+</footer>
+
+<script src="{{ url_for('static', filename='js/landing.js') }}" defer></script>
+</body>
+</html>

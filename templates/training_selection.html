@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="training-actions">
+    <h2>Train &amp; select models</h2>
+    <p>Compare multiple algorithms on the current feature set, pick the winner, and evaluate it on the held-out test split.</p>
+    <form action="{{ url_for('main.run_training_selection') }}" method="post">
+        <button type="submit" class="primary">Run training</button>
+    </form>
+</section>
+
+{% if page.target_options %}
+<section class="target-config">
+    <h2>Target configuration</h2>
+    <form action="{{ url_for('main.training_selection') }}" method="post" class="target-form">
+        <label for="training_target">Select target column</label>
+        <div class="target-select">
+            <select id="training_target" name="target_column">
+                <option value="" {% if not page.target_column %}selected{% endif %}>No target (unsupervised)</option>
+                {% for option in page.target_options %}
+                    <option value="{{ option.value }}" {% if option.value == page.target_column %}selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13.5l-5-5h10l-5 5z" /></svg>
+        </div>
+        <div class="action-row">
+            <button type="submit" class="ghost">Update target</button>
+        </div>
+    </form>
+</section>
+{% endif %}
+
+{% if page.training %}
+<section class="training-overview">
+    <h2>Task detection</h2>
+    <p><strong>Target:</strong> {{ project.target_column or "Not set" }}</p>
+    {% set task_label = page.training.task.replace("_", " ") %}
+    <p><strong>Task:</strong> {{ task_label|title }}</p>
+    <p>Training duration: {{ "%.2f"|format(page.training.duration) }}s</p>
+</section>
+
+{% if page.training.leaderboard %}
+<section class="leaderboard">
+    <h2>Candidate leaderboard</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>{{ page.training.leaderboard[0].metric_primary.label }}</th>
+                <th>{{ page.training.leaderboard[0].metric_secondary.label }}</th>
+                <th>Training time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for candidate in page.training.leaderboard %}
+                <tr>
+                    <td>{{ candidate.name }}</td>
+                    <td>{{ candidate.metric_primary.value }}</td>
+                    <td>{{ candidate.metric_secondary.value }}</td>
+                    <td>{{ candidate.training_time }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+<section class="why-winner">
+    <h2>Key drivers</h2>
+    <ul>
+        {% for driver in page.training.key_drivers %}
+            <li>{{ driver }}</li>
+        {% endfor %}
+        {% if not page.training.key_drivers %}
+            <li>Drivers unavailable for this task.</li>
+        {% endif %}
+    </ul>
+</section>
+
+{% if page.training.caveats %}
+<section class="explainability">
+    <h2>Caveats</h2>
+    <ul>
+        {% for caveat in page.training.caveats %}
+            <li>{{ caveat }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if page.training.test_metrics %}
+<section class="test-metrics">
+    <h2>Test evaluation</h2>
+    <ul class="pill-list">
+        {% for score in page.training.test_metrics.scores %}
+            <li>{{ score.label }}: {{ score.value }}</li>
+        {% endfor %}
+    </ul>
+    {% if page.training.test_metrics.roc_auc is not none %}
+        <p class="muted">ROC AUC: {{ page.training.test_metrics.roc_auc }}</p>
+    {% endif %}
+    {% if page.training.test_metrics.confusion %}
+        {% set confusion = page.training.test_metrics.confusion %}
+        <div class="confusion-grid">
+            <h3>Confusion matrix</h3>
+            <table class="data-table confusion-table">
+                <thead>
+                    <tr>
+                        <th>Actual \ Predicted</th>
+                        {% for label in confusion.labels %}
+                            <th>{{ label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in confusion.matrix %}
+                        <tr>
+                            <th>{{ confusion.labels[loop.index0] }}</th>
+                            {% for value in row %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if page.training.test_preview %}
+<section class="prediction-preview">
+    <h2>Predictions preview</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                {% for column in page.training.test_preview_columns %}
+                    <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in page.training.test_preview %}
+                <tr>
+                    {% for column in page.training.test_preview_columns %}
+                        <td>{{ row[column] }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if page.training.predictions_artifact %}
+        {% set art = page.artifact_lookup.get(page.training.predictions_artifact) %}
+        <div class="action-row">
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=page.training.predictions_artifact) }}">
+                Download predictions{{ ' (' ~ art.size ~ ')' if art and art.size else '' }}
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if not page.training.leaderboard %}
+<section class="leaderboard">
+    <p>No successful models yet. Adjust feature selection or target configuration.</p>
+</section>
+{% endif %}
+{% else %}
+<section class="training-overview">
+    <p>No models trained yet. Upload data, run preprocessing, then choose <strong>Run training</strong> to compare candidates.</p>
+</section>
+{% endif %}
+{% endblock %}

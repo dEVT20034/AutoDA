@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block">
+    <header>
+        <h3>Data Ingestion</h3>
+        <p class="muted">Upload raw text assets (CSV, TXT, ZIP) and register them to the active project. AutoDA keeps uploads inside this session.</p>
+    </header>
+
+    <article class="nlp-panel">
+        <form action="{{ url_for('nlp.upload_text_data') }}" method="post" enctype="multipart/form-data" class="stacked-form">
+            <label class="upload-dropzone" data-dropzone>
+                <input class="upload-dropzone__input" type="file" name="nlp_file" accept=".csv,.txt,.zip" required>
+                <span class="upload-dropzone__label">
+                    <span class="upload-dropzone__icon" aria-hidden="true"></span>
+                    <span class="upload-dropzone__meta">
+                        <strong>Choose a file</strong>
+                        <small>or drag &amp; drop here</small>
+                    </span>
+                </span>
+            </label>
+            <div class="action-row">
+                <button class="primary" type="submit">Upload dataset</button>
+                <button class="ghost" type="submit" formaction="{{ url_for('nlp.reset_job') }}">Reset workspace</button>
+            </div>
+        </form>
+        <p class="muted">Supported: CSV (with optional label column), TXT (single document), or ZIP (multiple TXT files).</p>
+    </article>
+
+    <article class="nlp-panel">
+        <h4>Schema snapshot</h4>
+        {% if job.columns %}
+            <p class="muted">Detected {{ job.columns|length }} column{{ '' if job.columns|length == 1 else 's' }}. Select your text column on the next step.</p>
+            <ul class="pill-list pill-list--stacked">
+                {% for col in job.columns[:12] %}
+                    <li>{{ col }}</li>
+                {% endfor %}
+                {% if job.columns|length > 12 %}
+                    <li>+ {{ job.columns|length - 12 }} more</li>
+                {% endif %}
+            </ul>
+        {% else %}
+            <p class="muted">Upload a dataset to preview column names and detected modalities.</p>
+        {% endif %}
+    </article>
+</section>
+
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('main.workflow') }}">Back to Workflow Hub</a>
+    {% set disabled = not job.raw_path %}
+    <a class="primary" href="{% if disabled %}#{% else %}{{ url_for('nlp.preprocessing') }}{% endif %}"
+       {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}>
+        Continue to Text Cleaning
+    </a>
+</div>
+{% endblock %}

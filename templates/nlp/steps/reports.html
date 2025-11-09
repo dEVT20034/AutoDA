@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block">
+    <header>
+        <h3>Reports &amp; Downloads</h3>
+        <p class="muted">Every asset generated in the NLP workflow is listed below. Downloads stay local to this machine.</p>
+    </header>
+
+    <article class="nlp-panel">
+        {% if job.artifacts %}
+            <ul class="artifact-list">
+                {% for artifact in job.artifacts %}
+                    <li>
+                        <div>
+                            <strong>{{ artifact.name }}</strong>
+                            <small>{{ artifact.size or "n/a" }}</small>
+                        </div>
+                        <a href="{{ url_for('nlp.download_artifact', filename=artifact.filename) }}">Download</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">Run preprocessing, profiling, feature extraction, or training to generate downloadable artifacts.</p>
+        {% endif %}
+    </article>
+
+    <article class="nlp-panel">
+        <h4>Next steps</h4>
+        <p class="muted">Share the cleaned dataset, feature matrix, or trained model with teammates. Need more iterations? Jump back to any step via the sidebar.</p>
+        <div class="action-row">
+            <a class="ghost" href="{{ url_for('nlp.ingestion') }}">Start another NLP run</a>
+        </div>
+    </article>
+</section>
+
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('nlp.training') }}">Back to training</a>
+    <a class="primary" href="{{ url_for('main.workflow') }}">Return to Workflow Hub</a>
+</div>
+{% endblock %}

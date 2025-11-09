@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" class="nlp-home">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NLP Hub | Workflow Selection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nlp.css') }}">
+</head>
+<body>
+    <main class="nlp-home__shell">
+        <section class="nlp-home__hero">
+            <div>
+                <span class="badge badge--soft">AutoDA Platform</span>
+                <h1>Choose a workflow</h1>
+                <p>Select the analysis experience that fits your data. Structured datasets continue through AutoDA &mdash; text-first projects launch in the NLP Hub.</p>
+            </div>
+            <div class="workflow-choice">
+                <article class="workflow-card">
+                    <header>
+                        <div class="workflow-icon workflow-icon--structured" aria-hidden="true"></div>
+                        <div>
+                            <h2>AutoDA &mdash; Structured Data</h2>
+                            <p>Upload mixed tabular data, automate preprocessing, feature engineering, and model selection.</p>
+                        </div>
+                    </header>
+                    <div class="workflow-card__actions">
+                        <a class="primary" href="{{ url_for('main.overview') }}" aria-label="Open AutoDA structured data workflow">Open AutoDA</a>
+                    </div>
+                </article>
+                <article class="workflow-card workflow-card--accent">
+                    <header>
+                        <div class="workflow-icon workflow-icon--nlp" aria-hidden="true"></div>
+                        <div>
+                            <h2>NLP Hub &mdash; Text &amp; Documents</h2>
+                            <p>Automate text ingestion, profiling, TF-IDF feature extraction, quick modeling, and reporting.</p>
+                        </div>
+                    </header>
+                    <div class="workflow-card__actions">
+                        <a class="ghost" href="{{ url_for('nlp.pipeline_new') }}" aria-label="Open NLP Hub text workflow">Open NLP Hub</a>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="nlp-home__recent">
+            <header>
+                <h2>Recent jobs</h2>
+                <p class="muted">Jump back into the last three automations you ran across AutoDA and NLP Hub.</p>
+            </header>
+            <div class="recent-grid">
+                {% if recent_jobs %}
+                    {% for job in recent_jobs %}
+                        <article class="recent-card">
+                            <header>
+                                <span class="recent-type recent-type--{{ job.type|lower }}">{{ job.type }}</span>
+                                <span class="recent-name">{{ job.name }}</span>
+                            </header>
+                            <ul class="recent-meta">
+                                <li><strong>Last action:</strong> {{ job.last_action }}</li>
+                                <li><strong>Artifacts:</strong> {{ job.artifacts }}</li>
+                                <li><strong>Status:</strong> {{ job.status }}</li>
+                            </ul>
+                            {% if job.link %}
+                            <a class="ghost" href="{{ job.link }}">Open</a>
+                            {% endif %}
+                        </article>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">No recent automations yet. Start with AutoDA or the NLP Hub.</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <aside class="nlp-home__help">
+            <p>NLP Hub is a separate workspace for text preprocessing, profiling, TF-IDF features, quick models, and shareable reports. Switch between workflows anytime.</p>
+        </aside>
+    </main>
+</body>
+</html>

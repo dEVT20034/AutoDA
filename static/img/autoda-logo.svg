@@ -1,0 +1,14 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5ED6E0"/>
+      <stop offset="50%" stop-color="#7F5BFF"/>
+      <stop offset="100%" stop-color="#ff5bbd"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(94,214,224,0.15)" stroke-width="8"/>
+  <path d="M58 15c12 6 22 20 22 32 0 8-5 14-10 16 6-10-2-24-12-30-12-8-28-6-39 4 8-18 25-26 39-22z" fill="url(#grad1)"/>
+  <path d="M102 56c-6-12-20-22-32-22-8 0-14 5-16 10 10-6 24 2 30 12 8 12 6 28-4 39 18-8 26-25 22-39z" fill="url(#grad1)" transform="rotate(120 60 60)"/>
+  <path d="M102 56c-6-12-20-22-32-22-8 0-14 5-16 10 10-6 24 2 30 12 8 12 6 28-4 39 18-8 26-25 22-39z" fill="url(#grad1)" transform="rotate(240 60 60)"/>
+  <text x="60" y="104" font-family="Inter, 'DM Sans', sans-serif" font-size="18" fill="#c9e8ff" text-anchor="middle">AutoDA</text>
+</svg>

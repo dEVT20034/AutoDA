@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="feature-actions">
+    <h2>Feature engineering</h2>
+    <p>Generate interaction and enriched features from the cleaned dataset. You can rerun this step anytime after preprocessing to refresh artifacts.</p>
+    <form class="feature-form" action="{{ url_for('main.run_feature_engineering') }}" method="post">
+        <button type="submit" class="primary">Run feature engineering</button>
+    </form>
+</section>
+
+{% if page.feature_engineering %}
+<section class="feature-summary">
+    <h2>Generated features</h2>
+    <ul class="pill-list">
+        <li>Total new features: {{ page.feature_engineering.total_new }}</li>
+        <li>Numeric transforms: {{ page.feature_engineering.numeric_new }}</li>
+        <li>Date/time expansions: {{ page.feature_engineering.datetime_new }}</li>
+    </ul>
+    {% if page.feature_engineering.new_columns %}
+        <h3>New columns</h3>
+        <ul>
+            {% for name in page.feature_engineering.new_columns[:20] %}
+                <li>{{ name }}</li>
+            {% endfor %}
+        </ul>
+        {% if page.feature_engineering.new_columns|length > 20 %}
+            <p class="muted">+ {{ page.feature_engineering.new_columns|length - 20 }} more</p>
+        {% endif %}
+    {% endif %}
+</section>
+
+{% if page.feature_engineering.preview %}
+<section class="data-preview card">
+    <h2>Preview (first 10 rows)</h2>
+    <div class="table-scroll">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    {% for column in page.feature_engineering.preview_columns %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in page.feature_engineering.preview %}
+                    <tr>
+                        {% for column in page.feature_engineering.preview_columns %}
+                            <td>{{ row[column] }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+<section class="feature-downloads">
+    <h2>Artifacts</h2>
+    <div class="action-row">
+        {% set lookup = page.artifact_lookup %}
+        {% set artifacts = page.feature_engineering.artifacts %}
+        {% if artifacts.cleaned %}
+            {% set art = lookup.get(artifacts.cleaned) %}
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.cleaned) }}">Cleaned ({{ art.size if art else 'CSV' }})</a>
+        {% endif %}
+        {% if artifacts.encoded %}
+            {% set art = lookup.get(artifacts.encoded) %}
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.encoded) }}">Encoded ({{ art.size if art else 'CSV' }})</a>
+        {% endif %}
+        {% if artifacts.train %}
+            {% set art = lookup.get(artifacts.train) %}
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.train) }}">Train split ({{ art.size if art else 'CSV' }})</a>
+        {% endif %}
+        {% if artifacts.test %}
+            {% set art = lookup.get(artifacts.test) %}
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifacts.test) }}">Test split ({{ art.size if art else 'CSV' }})</a>
+        {% endif %}
+    </div>
+</section>
+{% else %}
+<section class="feature-summary">
+    <p>No engineered features yet. Run the feature engineering step to create additional signals and refreshed modeling artifacts.</p>
+</section>
+{% endif %}
+{% endblock %}

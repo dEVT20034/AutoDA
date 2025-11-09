@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block pipeline %}{% endblock %}
+{% block hero_meta %}{% endblock %}
+
+{% block content %}
+<div class="web-scraper-shell">
+    <section class="web-scraper-lead">
+        <div class="web-scraper-lead__content">
+            <span class="badge badge--soft">Companion tool</span>
+            <h2>Web Scraper</h2>
+            <p class="muted">
+                Capture insights from any webpage to enrich your requirements. This preview shows how AutoDA will guide the experience.
+            </p>
+            <ul>
+                <li>Paste the page URL and describe what you need.</li>
+                <li>Add optional headers or API tokens for gated docs.</li>
+                <li>AutoDA highlights headings, key takeaways, and a clean summary.</li>
+            </ul>
+        </div>
+        <div class="web-scraper-lead__cta">
+            <span class="muted">Back to Workflow Hub</span>
+            <a class="primary" href="{{ url_for('main.workflow') }}">Return to dashboard</a>
+        </div>
+    </section>
+
+        <section class="web-scraper-flow">
+        <article class="web-scraper-step">
+            <div class="web-scraper-step__info">
+                <span class="badge badge--soft">Step 01</span>
+                <h3>Sample request</h3>
+                <p>Configure the scrape request with a URL, intent, and any headers you require.</p>
+            </div>
+            <div class="web-scraper-step__body">
+                <form class="web-scraper-form" action="{{ url_for('main.web_scrape_helper') }}" method="post">
+                    <label>Website URL</label>
+                    <input type="url" name="scrape_url" placeholder="https://example.com/pricing" required>
+
+                    <label>What do you need from this page?</label>
+                    <textarea name="scrape_goal" rows="3" placeholder="e.g., Summarize pricing tiers and list feature highlights."></textarea>
+
+                    <div class="form-grid">
+                        <label>Custom header (optional)
+                            <input type="text" name="scrape_api_header" placeholder="Authorization">
+                        </label>
+                        <label>API key / token (optional)
+                            <input type="text" name="scrape_api_key" placeholder="Paste credential if required">
+                        </label>
+                    </div>
+
+                    <button type="submit" class="primary">Run web scrape</button>
+                </form>
+            </div>
+        </article>
+
+    <article class="web-scraper-step">
+            <div class="web-scraper-step__info">
+                <span class="badge badge--soft">Step 02</span>
+                <h3>Prototype</h3>
+                <p>Inspect the extracted insights, copy highlights, or rerun with new instructions.</p>
+            </div>
+            <div class="web-scraper-step__body">
+                {% if web_scrape %}
+                    {% if web_scrape_dataset %}
+                        <div class="web-scraper-dataset-card">
+                            <div>
+                                <span class="meta-label">Dataset ready</span>
+                                <span class="meta-value">
+                                    {% if web_scrape_dataset.rows %}
+                                        {{ web_scrape_dataset.rows }} rows captured
+                                    {% elif web_scrape.dataset_rows %}
+                                        {{ web_scrape.dataset_rows }} rows captured
+                                    {% else %}
+                                        Latest scrape available
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <a class="primary" href="{{ url_for('main.download_web_scrape_dataset') }}">
+                                Download dataset
+                            </a>
+                        </div>
+                    {% endif %}
+                    <div class="web-scraper-result">
+                        <p>
+                            <strong>Source:</strong>
+                            <a href="{{ web_scrape.url }}" target="_blank" rel="noreferrer">{{ web_scrape.url }}</a>
+                        </p>
+                        <p class="muted"><strong>Intent:</strong> {{ web_scrape.goal }}</p>
+                        <h4>{{ web_scrape.title }}</h4>
+                        <p class="muted">{{ web_scrape.description }}</p>
+                        {% if web_scrape.headings %}
+                            <div class="web-scraper-tags">
+                                {% for heading in web_scrape.headings %}
+                                    <span>{{ heading }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        {% if web_scrape.highlights %}
+                            <ul class="web-scraper-highlights">
+                                {% for highlight in web_scrape.highlights %}
+                                    <li>{{ highlight }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <p>{{ web_scrape.summary }}</p>
+                    </div>
+                {% else %}
+                    <div class="web-scraper-empty">
+                        <p>No scrape yet. Submit a URL to preview the extracted insights.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </article>
+    </section>
+</div>
+{% endblock %}
+

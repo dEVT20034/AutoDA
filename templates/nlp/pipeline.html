@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en" class="nlp-pipeline" data-job-id="{{ job.id }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NLP Hub | Automation Pipeline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/nlp.css') }}">
+</head>
+<body>
+    <div class="nlp-shell">
+        <aside class="nlp-steps" aria-label="NLP pipeline navigation">
+            <h2>Steps</h2>
+            <nav>
+                <ul>
+                    {% for step in steps %}
+                    <li>
+                        <a href="#{{ step.anchor }}" data-step-link="{{ step.key }}" class="{% if step.key in job.completed_steps %}is-complete{% endif %}{% if step.key == job.current_step %} is-active{% endif %}">
+                            <span class="step-index">{{ loop.index }}</span>
+                            <span class="step-label">{{ step.label }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="nlp-main">
+            <section class="nlp-hero">
+                <div>
+                    <span class="badge badge--soft">NLP Hub</span>
+                    <h1>NLP Automation</h1>
+                    <p>Automate text cleaning, profiling, TF-IDF feature extraction, and lightweight modeling with reusable artifacts.</p>
+                </div>
+                <div class="nlp-hero__stats">
+                    <article class="stat-card">
+                        <span class="stat-label">Current step</span>
+                        <span class="stat-value" id="nlp-current-step">{{ job.current_step|title }}</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Last action</span>
+                        <span class="stat-value" id="nlp-last-action">{{ job.last_action or "n/a" }}</span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Data quality</span>
+                        <span class="stat-value" id="nlp-data-quality">
+                            {% if job.data_quality.raw %}
+                                Raw {{ job.data_quality.raw }} → Cleaned {{ job.data_quality.cleaned or "?" }}
+                            {% else %}
+                                Not scored
+                            {% endif %}
+                        </span>
+                    </article>
+                    <article class="stat-card">
+                        <span class="stat-label">Artifacts</span>
+                        <span class="stat-value" id="nlp-artifact-count">{{ job.artifact_count }}</span>
+                    </article>
+                </div>
+            </section>
+
+            <section id="ingestion" class="nlp-panel" data-step="ingestion">
+                <header>
+                    <h2>Ingestion</h2>
+                    <p>Upload CSV, TXT, or ZIP files and pick the text and label columns to begin.</p>
+                </header>
+                <div class="panel-body">
+                    <form id="nlp-upload-form" class="panel-form" enctype="multipart/form-data">
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        <div class="form-row">
+                            <label for="nlp-file">Text dataset</label>
+                            <div class="upload-dropzone" data-dropzone>
+                                <input id="nlp-file" class="upload-dropzone__input" type="file" name="nlp_file" accept=".csv,.txt,.zip" required>
+                                <label for="nlp-file" class="upload-dropzone__label">
+                                    <span class="upload-dropzone__icon" aria-hidden="true"></span>
+                                    <span class="upload-dropzone__meta">
+                                        <strong>Choose a file</strong>
+                                        <small>or drag &amp; drop here</small>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <label>
+                                Text column
+                                <select name="text_column" data-role="text-column-select">
+                                    <option value="">Auto-detect</option>
+                                    {% for column in job.columns %}
+                                        <option value="{{ column }}" {% if column == job.text_column %}selected{% endif %}>{{ column }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>
+                                Label column (optional)
+                                <select name="label_column" data-role="label-column-select">
+                                    <option value="">None</option>
+                                    {% for column in job.columns %}
+                                        <option value="{{ column }}" {% if column == job.label_column %}selected{% endif %}>{{ column }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <div class="form-grid">
+                            <label>
+                                Sample size
+                                <input type="number" name="sample_size" min="100" step="100" placeholder="10,000">
+                            </label>
+                            <label>
+                                Encoding
+                                <select name="encoding">
+                                    <option value="auto" selected>Auto detect</option>
+                                    <option value="utf-8">UTF-8</option>
+                                    <option value="latin-1">Latin-1</option>
+                                </select>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="autodetect_language" checked>
+                                <span>Enable language auto-detect</span>
+                            </label>
+                        </div>
+                        <div class="action-row">
+                            <button type="submit" class="primary" aria-label="Upload text dataset">Upload &amp; parse</button>
+                            <div class="spinner" hidden role="status" aria-live="polite">Loading…</div>
+                        </div>
+                    </form>
+                    <div class="panel-results">
+                        <h3>Preview</h3>
+                        <table class="data-table" id="ingestion-preview" aria-live="polite"></table>
+                        <dl class="summary-pills" id="ingestion-summary"></dl>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profiling" class="nlp-panel" data-step="profiling">
+                <header>
+                    <h2>Profiling</h2>
+                    <p>Inspect corpus-level statistics, frequent terms, and length distributions.</p>
+                </header>
+                <div class="panel-body">
+                    <div class="panel-form">
+                        <button type="button" class="primary" data-run-step="profiling">Run profiling</button>
+                        <button type="button" class="ghost" data-export="profiling">Export profiling report</button>
+                        <div class="spinner" hidden data-spinner="profiling" role="status" aria-live="polite">Processing…</div>
+                    </div>
+                    <div class="panel-results profiling-results">
+                        <div class="stat-card-grid" id="profiling-stats"></div>
+                        <div class="grid-two">
+                            <div>
+                                <h3>Top unigrams</h3>
+                                <table class="data-table" id="profiling-unigrams"></table>
+                            </div>
+                            <div>
+                                <h3>Top bigrams</h3>
+                                <table class="data-table" id="profiling-bigrams"></table>
+                            </div>
+                        </div>
+                        <div class="length-plot">
+                            <h3>Length distribution</h3>
+                            <div id="profiling-length"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="cleaning" class="nlp-panel" data-step="cleaning">
+                <header>
+                    <h2>Cleaning</h2>
+                    <p>Normalize casing, trim punctuation, remove stopwords, and lemmatize documents.</p>
+                </header>
+                <div class="panel-body">
+                    <form id="cleaning-form" class="panel-form">
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        <div class="form-grid">
+                            <label class="checkbox">
+                                <input type="checkbox" name="lowercase" checked>
+                                <span>Lowercase text</span>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="remove_punctuation" checked>
+                                <span>Remove punctuation</span>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="remove_stopwords" checked>
+                                <span>Remove stopwords</span>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="lemmatize" checked>
+                                <span>Lemmatize tokens</span>
+                            </label>
+                            <label class="checkbox">
+                                <input type="checkbox" name="profanity_filter">
+                                <span>Apply profanity filter</span>
+                            </label>
+                        </div>
+                        <label>
+                            Custom stopword list
+                            <input type="file" name="custom_stopwords" accept=".txt">
+                        </label>
+                        <div class="action-row">
+                            <button type="button" class="ghost" data-preview-cleaning>Preview cleaning</button>
+                            <button type="submit" class="primary" aria-label="Run text cleaning">Run clean</button>
+                            <div class="spinner" hidden data-spinner="cleaning" role="status" aria-live="polite">Cleaning…</div>
+                        </div>
+                    </form>
+                    <div class="panel-results cleaning-results">
+                        <div class="grid-two" id="cleaning-examples"></div>
+                        <p id="cleaning-summary" class="muted"></p>
+                        <div id="cleaning-downloads" class="action-row action-row--spaced"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="features" class="nlp-panel" data-step="features">
+                <header>
+                    <h2>Feature Engineering</h2>
+                    <p>Extract TF-IDF vectors and capture the strongest terms across your corpus.</p>
+                </header>
+                <div class="panel-body">
+                    <form id="features-form" class="panel-form">
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        <div class="form-grid">
+                            <label>
+                                Max features
+                                <input type="range" name="max_features" min="1000" max="50000" step="500" value="5000">
+                            </label>
+                            <label>
+                                Min document frequency
+                                <input type="number" name="min_df" min="1" value="1">
+                            </label>
+                            <label>
+                                Max document frequency (%)
+                                <input type="number" name="max_df" min="1" max="100" value="100">
+                            </label>
+                        </div>
+                        <div class="form-grid">
+                            <label>
+                                N-gram range
+                                <select name="ngram_range">
+                                    <option value="1,1">Unigrams</option>
+                                    <option value="1,2" selected>Unigrams + bigrams</option>
+                                    <option value="1,3">Up to trigrams</option>
+                                </select>
+                            </label>
+                            <label>
+                                Embedding (optional)
+                                <select name="embedding">
+                                    <option value="">None (TF-IDF only)</option>
+                                    <option value="glove">Average GloVe (if available)</option>
+                                    <option value="spacy">spaCy document vectors</option>
+                                    <option value="sentence-transformers">Sentence Transformers</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="action-row">
+                            <button type="submit" class="primary" aria-label="Extract features">Extract features</button>
+                            <div class="spinner" hidden data-spinner="features" role="status" aria-live="polite">Extracting…</div>
+                        </div>
+                    </form>
+                    <div class="panel-results features-results">
+                        <p id="features-summary" class="muted"></p>
+                        <table class="data-table" id="features-top-terms"></table>
+                        <div id="features-downloads" class="action-row action-row--spaced"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="train" class="nlp-panel" data-step="train">
+                <header>
+                    <h2>Model Train</h2>
+                    <p>Evaluate lightweight classifiers to benchmark performance on labeled text data.</p>
+                </header>
+                <div class="panel-body">
+                    <form id="train-form" class="panel-form">
+                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                        <div class="form-grid">
+                            <label>
+                                Model
+                                <select name="model_type">
+                                    <option value="logreg" selected>Logistic Regression</option>
+                                    <option value="svm">Linear SVM</option>
+                                    <option value="mlp">Simple Neural Network</option>
+                                </select>
+                            </label>
+                            <label>
+                                Train / test split (% for test)
+                                <input type="number" name="test_size" min="10" max="50" value="20">
+                            </label>
+                            <label>
+                                Random seed
+                                <input type="number" name="random_state" value="42">
+                            </label>
+                        </div>
+                        <div class="form-grid" data-mlp-options hidden>
+                            <label>
+                                Hidden units
+                                <input type="number" name="hidden_units" min="16" max="512" value="128">
+                            </label>
+                            <label>
+                                Epochs
+                                <input type="number" name="epochs" min="5" max="50" value="10">
+                            </label>
+                        </div>
+                        <div class="action-row">
+                            <button type="submit" class="primary" aria-label="Train quick model">Quick train</button>
+                            <div class="spinner" hidden data-spinner="train" role="status" aria-live="polite">Training…</div>
+                        </div>
+                    </form>
+                    <div class="panel-results train-results">
+                        <div class="stat-card-grid" id="train-metrics"></div>
+                        <div id="train-confusion"></div>
+                        <div id="train-misclassified"></div>
+                        <div id="train-downloads" class="action-row action-row--spaced"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reports" class="nlp-panel" data-step="reports">
+                <header>
+                    <h2>Reports &amp; Artifacts</h2>
+                    <p>Review generated files, audit events, and export shareable deliverables.</p>
+                </header>
+                <div class="panel-body">
+                    <div class="panel-results">
+                        <div id="artifact-list" class="artifact-grid"></div>
+                        <div class="action-row">
+                            <button type="button" class="ghost" data-generate-report>Generate PDF report</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <aside class="nlp-context">
+            <section>
+                <h2>Context</h2>
+                <p>Track progress, review the audit trail, and keep an eye on generated artifacts as you advance.</p>
+            </section>
+            <section>
+                <h3>Audit trail</h3>
+                <ul class="audit-list" id="audit-list">
+                    {% for entry in job.audit %}
+                        <li>
+                            <span class="audit-time">{{ entry.timestamp }}</span>
+                            <strong>{{ entry.step|title }}</strong>
+                            <p>{{ entry.summary }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            <section>
+                <h3>Tips</h3>
+                <ul class="tip-list">
+                    <li>Re-run profiling after cleaning to compare distributions.</li>
+                    <li>Extract TF-IDF features with different n-gram ranges to surface new signals.</li>
+                    <li>Use the quick train button for baselines; export artifacts to iterate in notebooks.</li>
+                </ul>
+            </section>
+        </aside>
+    </div>
+    <script src="{{ url_for('static', filename='js/nlp.js') }}" defer></script>
+</body>
+</html>

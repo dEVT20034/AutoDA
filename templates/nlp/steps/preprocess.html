@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block">
+    <header>
+        <h3>Text Cleaning &amp; Preprocessing</h3>
+        <p class="muted">Set your text/label columns, toggle normalization behaviours, and preview the cleaned output before proceeding.</p>
+    </header>
+
+    <article class="nlp-panel">
+        {% if job.columns %}
+        <form action="{{ url_for('nlp.preprocess_text') }}" method="post" class="stacked-form">
+            <label>
+                Text column
+                <select name="text_column">
+                    {% for col in job.columns %}
+                        <option value="{{ col }}" {% if col == job.text_column %}selected{% endif %}>{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Label column (optional)
+                <select name="label_column">
+                    <option value="">None</option>
+                    {% for col in job.columns %}
+                        <option value="{{ col }}" {% if col == job.label_column %}selected{% endif %}>{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <div class="form-grid">
+                <label class="checkbox">
+                    <input type="checkbox" name="remove_stopwords" {% if job.preprocessing_options.remove_stopwords %}checked{% endif %}>
+                    <span>Remove stopwords</span>
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" name="lemmatize" {% if job.preprocessing_options.lemmatize %}checked{% endif %}>
+                    <span>Apply lemmatization</span>
+                </label>
+            </div>
+            <label>
+                Profiling sample size (optional)
+                <input type="number" name="sample_size" min="100" step="100" value="{{ job.preprocessing_options.sample_size or '' }}">
+            </label>
+            <button class="primary" type="submit">Run preprocessing</button>
+        </form>
+        {% else %}
+            <p class="muted">Upload a dataset first to configure preprocessing options.</p>
+        {% endif %}
+    </article>
+
+    <article class="nlp-panel">
+        <h4>Before / After preview</h4>
+        {% if job.samples %}
+            <div class="nlp-sample">
+                {% for sample in job.samples %}
+                    <div class="sample-row">
+                        <div>
+                            <span>Original</span>
+                            <p>{{ sample.original }}</p>
+                        </div>
+                        <div>
+                            <span>Cleaned</span>
+                            <p>{{ sample.cleaned }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="muted">Run preprocessing to generate up to five sample pairs for quick inspection.</p>
+        {% endif %}
+    </article>
+</section>
+
+{% set cleaned_ready = job.cleaned_path %}
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('nlp.ingestion') }}">Back to ingestion</a>
+    <a class="primary" href="{% if cleaned_ready %}{{ url_for('nlp.automation_stage') }}{% else %}#{% endif %}"
+       {% if not cleaned_ready %}aria-disabled="true" tabindex="-1"{% endif %}>
+        Continue to NLP Automation
+    </a>
+</div>
+{% endblock %}

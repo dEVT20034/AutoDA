@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="settings-section">
+    <h2>Project details</h2>
+    <p><strong>Name:</strong> {{ page.project_info.name }}</p>
+    <p><strong>Description:</strong> {{ page.project_info.description or "n/a" }}</p>
+</section>
+
+<section class="settings-section">
+    <h2>Data retention</h2>
+    <p>{{ page.retention }}</p>
+</section>
+
+<section class="settings-section">
+    <h2>Notifications</h2>
+    <ul>
+        {% for item in page.notification_preferences %}
+            <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

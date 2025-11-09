@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block">
+    <header>
+        <h3>Training &amp; Selection</h3>
+        <p class="muted">Benchmark a lightweight classifier (logistic regression) using the TF-IDF features. Metrics are computed on the held-out test split.</p>
+    </header>
+
+    <article class="nlp-panel">
+        {% set can_train = job.vectorizer_path and job.label_column %}
+        <form action="{{ url_for('nlp.train_text_model') }}" method="post" class="action-row">
+            <button class="primary" type="submit" {% if not can_train %}disabled{% endif %}>Train baseline model</button>
+            {% if not job.label_column %}
+                <span class="muted">Set a label column on the preprocessing step.</span>
+            {% elif not job.vectorizer_path %}
+                <span class="muted">Extract TF-IDF features before training.</span>
+            {% endif %}
+        </form>
+
+        {% if job.model_summary %}
+            {% if job.model_summary.status == "trained" %}
+                <table class="data-table data-table--metrics">
+                    <tbody>
+                        <tr><td>Accuracy</td><td>{{ job.model_summary.accuracy | round(3) }}</td></tr>
+                        <tr><td>Precision</td><td>{{ job.model_summary.precision | round(3) }}</td></tr>
+                        <tr><td>Recall</td><td>{{ job.model_summary.recall | round(3) }}</td></tr>
+                        <tr><td>F1-score</td><td>{{ job.model_summary.f1 | round(3) }}</td></tr>
+                    </tbody>
+                </table>
+                {% if job.model_summary.confusion_matrix %}
+                    {% set cm = job.model_summary.confusion_matrix %}
+                    <h4>Confusion matrix</h4>
+                    <table class="data-table data-table--compact">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                {% for label in cm.labels %}
+                                    <th>{{ label }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in cm.matrix %}
+                                {% set idx = loop.index0 %}
+                                <tr>
+                                    <th>{{ cm.labels[idx] }}</th>
+                                    {% for value in row %}
+                                        <td>{{ value }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            {% else %}
+                <p class="muted">{{ job.model_summary.message }}</p>
+            {% endif %}
+        {% else %}
+            <p class="muted">Metrics will appear here after training completes.</p>
+        {% endif %}
+    </article>
+</section>
+
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('nlp.split') }}">Back to split summary</a>
+    <a class="primary" href="{{ url_for('nlp.reports') }}">
+        Continue to Reports
+    </a>
+</div>
+{% endblock %}

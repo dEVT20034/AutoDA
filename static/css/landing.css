@@ -1,0 +1,321 @@
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0a0c1a;
+    color: #e5ebff;
+    min-height: 100vh;
+}
+
+.landing-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 6vw;
+    background: rgba(6, 8, 18, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(18px);
+}
+
+.landing-header nav {
+    display: flex;
+    gap: 24px;
+}
+
+.landing-header nav a {
+    text-decoration: none;
+    color: rgba(229, 235, 255, 0.75);
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.landing-header nav a:hover {
+    color: #fff;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.logo img {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 16px rgba(94, 214, 224, 0.4));
+}
+
+.cta-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.cta-group form {
+    margin: 0;
+}
+
+.user-pill {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-weight: 600;
+}
+
+.hero {
+    padding: 90px 6vw 50px;
+    display: grid;
+    gap: 32px;
+    background: radial-gradient(circle at 10% 20%, rgba(55, 214, 192, 0.2), transparent 45%),
+                radial-gradient(circle at 80% 0, rgba(137, 116, 255, 0.25), transparent 50%),
+                #0a0c1a;
+}
+
+.hero__copy h1 {
+    font-size: clamp(2.8rem, 4vw, 4.2rem);
+    margin: 12px 0 10px;
+    font-family: "Space Grotesk", sans-serif;
+}
+
+.hero__cta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.hero__buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.hero-card button {
+    margin-top: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: transparent;
+    color: #e5ebff;
+    padding: 8px 16px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.hero-card button:hover {
+    border-color: rgba(55, 214, 192, 0.6);
+    background: rgba(55, 214, 192, 0.15);
+}
+
+.hero-card {
+    display: flex;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    padding: 18px;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.hero-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(55, 214, 192, 0.6);
+}
+
+.hero-icon {
+    font-size: 1.8rem;
+}
+
+.feature-grid,
+.workflow-steps,
+.stats,
+.contact {
+    padding: 40px 6vw;
+    display: grid;
+    gap: 20px;
+}
+
+.feature-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.feature-grid article,
+.workflow-card,
+.stats .stat,
+.web-scraper-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 24px;
+}
+
+.feature-grid article span {
+    font-size: 1.8rem;
+}
+
+.workflow-steps {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.workflow-card ol {
+    margin: 10px 0 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 6px;
+}
+
+.stats {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.stat {
+    text-align: center;
+    padding: 32px 16px;
+    background: linear-gradient(135deg, rgba(137, 116, 255, 0.2), rgba(25, 183, 255, 0.1));
+}
+
+.stat-value {
+    font-size: 2.4rem;
+    font-weight: 600;
+    display: block;
+}
+
+.about {
+    padding: 40px 6vw;
+}
+
+.about__card {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 32px;
+}
+
+.about__grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+    gap: 32px;
+    align-items: flex-start;
+}
+
+.about__blurb {
+    max-width: 640px;
+    line-height: 1.55;
+}
+
+.about__highlights {
+    margin: 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 8px;
+}
+
+.contact {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(320px, 1fr);
+    gap: 32px;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 32px;
+    margin: 0 6vw 40px;
+    align-items: start;
+}
+
+.contact__intro h2 {
+    margin-top: 0;
+}
+
+.contact__cta {
+    display: flex;
+    justify-content: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.contact-form {
+    display: grid;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px;
+    min-width: 320px;
+}
+
+.contact-form label {
+    display: grid;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: rgba(229, 235, 255, 0.85);
+}
+
+.contact-form input,
+.contact-form textarea {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(8, 12, 22, 0.8);
+    color: #e5ebff;
+    padding: 12px 14px;
+    font-family: inherit;
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.contact-form__submit {
+    width: 100%;
+    text-align: center;
+    margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+    .about,
+    .contact {
+        grid-template-columns: 1fr;
+    }
+    .contact {
+        margin: 0 0 40px;
+    }
+    .about__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.landing-footer {
+    padding: 32px 6vw;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(4, 6, 14, 0.9);
+    display: grid;
+    gap: 16px;
+    text-align: center;
+}
+
+.landing-footer .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+}
+
+.landing-footer a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.9rem;
+}

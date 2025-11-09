@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="feature-selection-actions">
+    <h2>Feature selection</h2>
+    {% if page.feature_options %}
+        <p>Choose which features to keep for modeling or let AutoDA rank them for you. Target column: <strong>{{ page.target or 'Not set' }}</strong>.</p>
+        {% set current_selection = page.feature_selection.selected if page.feature_selection and page.feature_selection.selected else [] %}
+        <form action="{{ url_for('main.run_feature_selection') }}" method="post" class="feature-selection-form">
+            <div class="feature-scroll">
+                <div class="feature-toggle-grid" role="group" aria-label="Feature options">
+                    {% for feature in page.feature_options %}
+                        <label class="feature-toggle">
+                            <input type="checkbox" name="selected_features" value="{{ feature }}" {% if feature in current_selection %}checked{% endif %}>
+                            <span class="feature-toggle__pill">
+                                <span class="feature-toggle__indicator" aria-hidden="true"></span>
+                                <span class="feature-toggle__label">{{ feature }}</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="muted">Tap the toggles to keep features or use Auto Mode to rank them for you.</p>
+            <div class="action-row">
+                <button type="submit" name="action" value="manual" class="primary">Apply manual selection</button>
+                <button type="submit" name="action" value="auto" class="ghost">Auto select top features</button>
+            </div>
+        </form>
+    {% else %}
+        <p>No engineered features available yet. Run preprocessing/feature engineering first.</p>
+    {% endif %}
+</section>
+
+{% if page.feature_selection %}
+<section class="feature-selection-summary">
+    <h2>Selection summary</h2>
+    <ul class="pill-list">
+        <li>Method: {{ page.feature_selection.method }}</li>
+        <li>Features kept: {{ page.feature_selection.count }}</li>
+    </ul>
+    {% if page.feature_selection.selected %}
+        <h3>Chosen features</h3>
+        <ul>
+            {% for feature in page.feature_selection.selected[:25] %}
+                <li>{{ feature }}</li>
+            {% endfor %}
+        </ul>
+        {% if page.feature_selection.selected|length > 25 %}
+            <p class="muted">+ {{ page.feature_selection.selected|length - 25 }} more</p>
+        {% endif %}
+    {% endif %}
+
+    {% if page.feature_selection.importance %}
+        <h3>Importance scores</h3>
+        <ul>
+            {% for feature, score in page.feature_selection.importance.items() %}
+                <li>{{ feature }} - {{ '%.3f'|format(score) }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if page.feature_selection.artifact %}
+        {% set art = page.artifact_lookup.get(page.feature_selection.artifact) %}
+        <div class="action-row">
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=page.feature_selection.artifact) }}">Download selection{{ ' (' ~ art.size ~ ')' if art and art.size else '' }}</a>
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "auth_base.html" %}
+{% set title = "Create Account" %}
+{% set subtitle = "Set up AutoDA for your next analytics initiative." %}
+
+{% block content %}
+<form method="post" class="auth-form">
+    <label>
+        Full name
+        <input type="text" name="name" placeholder="Jordan Analyst" required>
+    </label>
+    <label>
+        Work email
+        <input type="email" name="email" placeholder="you@example.com" required>
+    </label>
+    <label>
+        Password
+        <input type="password" name="password" placeholder="Create a password" minlength="8" required>
+    </label>
+    <label>
+        Confirm password
+        <input type="password" name="confirm_password" placeholder="Repeat password" minlength="8" required>
+    </label>
+    <div class="auth-actions">
+        <button type="submit" class="primary">Sign up</button>
+        <a href="{{ url_for('main.signin') }}" class="ghost">Already have an account?</a>
+    </div>
+</form>
+{% endblock %}

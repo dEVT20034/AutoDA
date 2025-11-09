@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if page.split_validation %}
+<section class="split-options">
+    <h2>Split strategy</h2>
+    {% if page.split_validation.strategy %}
+        <p>{{ page.split_validation.strategy }}</p>
+    {% endif %}
+    {% if page.split_validation.note %}
+        <p class="muted">{{ page.split_validation.note }}</p>
+    {% endif %}
+    {% if page.split_validation.message %}
+        <p>{{ page.split_validation.message }}</p>
+    {% endif %}
+</section>
+{% else %}
+<section class="split-options">
+    <p>No split metrics yet. Run preprocessing or Auto Mode to create train/validation/test partitions.</p>
+</section>
+{% endif %}
+
+{% if page.split_validation and page.split_validation.splits %}
+<section class="split-options">
+    <h2>Split overview</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Split</th>
+                <th>Rows</th>
+                <th>Class balance</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for split in page.split_validation.splits %}
+                <tr>
+                    <td>{{ split.name }}</td>
+                    <td>{{ split.rows }}</td>
+                    <td>
+                        {% if split.class_balance %}
+                            {% for cls, pct in split.class_balance.items() %}
+                                <span>{{ cls }}: {{ pct }}</span>{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            n/a
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if page.split_previews %}
+<section class="split-preview">
+    <h2>Sample records</h2>
+    <div class="grid-two">
+        {% for preview in page.split_previews %}
+            <article>
+                <h3>{{ preview.label }}</h3>
+                <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            {% for column in preview.columns %}
+                                <th>{{ column }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in preview.rows %}
+                            <tr>
+                                {% for column in preview.columns %}
+                                    <td>{{ row[column] }}</td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if page.validation_notes %}
+<section class="validation-notes">
+    <h2>Validation checks</h2>
+    <ul class="detail-list">
+        {% for note in page.validation_notes %}
+            <li>{{ note }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="auto-mode">
+    <h2>Auto Mode pipeline</h2>
+    {% if page.auto_mode_status.completed %}
+        <p class="success">Auto Mode finished on {{ page.auto_mode_status.last_run.strftime("%Y-%m-%d %H:%M:%S") if page.auto_mode_status.last_run else "n/a" }}.</p>
+        <a class="primary" href="{{ url_for('main.reports') }}">View reports</a>
+    {% else %}
+        <p>Trigger Auto Mode from Data Ingestion to populate each step.</p>
+    {% endif %}
+    {% if page.auto_mode_steps %}
+        <h3>Recent steps</h3>
+        <ol class="auto-mode-steps">
+            {% for step in page.auto_mode_steps %}
+                <li>
+                    <strong>{{ step.step }}</strong>
+                    <span>{{ step.detail }}</span>
+                    <small>{{ step.timestamp }}</small>
+                </li>
+            {% endfor %}
+        </ol>
+    {% endif %}
+</section>
+{% endblock %}

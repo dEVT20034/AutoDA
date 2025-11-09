@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if page.cards %}
+<section class="card-grid">
+    {% for card in page.cards %}
+        <article class="info-card">
+            <h3>{{ card.label }}</h3>
+            <p>{{ card.value }}</p>
+        </article>
+    {% endfor %}
+</section>
+{% endif %}
+
+<section class="status-summary">
+    <h2>Pipeline snapshot</h2>
+    <p>{{ page.progress_brief }}</p>
+</section>
+
+<section class="quick-actions">
+    <h2>Quick actions</h2>
+    <div class="action-buttons">
+        {% for action in page.quick_actions %}
+            <a class="primary" href="{{ url_for(action.endpoint) }}">{{ action.label }}</a>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="activity-log">
+    <h2>Activity log</h2>
+    <ol>
+        {% for log in page.activity_log %}
+            <li>
+                <div class="log-time">{{ log.time }}</div>
+                <div class="log-body">
+                    <strong>{{ log.action }}</strong>
+                    <p>{{ log.detail }}</p>
+                </div>
+            </li>
+        {% endfor %}
+        {% if not page.activity_log %}
+            <li>No activity recorded yet.</li>
+        {% endif %}
+    </ol>
+</section>
+
+<section class="data-retention">
+    <h2>Privacy & retention</h2>
+    <p>{{ page.data_retention }}</p>
+</section>
+
+{% if page.error_guidance %}
+<section class="error-guidance">
+    <h2>Graceful error states</h2>
+    <div class="grid-two">
+        {% for item in page.error_guidance %}
+            <article>
+                <h3>{{ item.title }}</h3>
+                <p>{{ item.detail }}</p>
+                <button type="button" class="ghost">{{ item.action }}</button>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}

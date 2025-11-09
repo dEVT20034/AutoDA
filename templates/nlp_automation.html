@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set nlp = page.nlp %}
+{% set options = nlp.options or {} %}
+{% set uploaded = nlp.uploaded or {} %}
+{% set lookup = page.artifact_lookup or {} %}
+
+<section class="panel">
+    <header class="panel__header">
+        <h2>Upload text dataset</h2>
+        <p class="muted">Accepted formats: CSV (with text column), TXT (single or paragraph-per-line), ZIP of TXT files.</p>
+    </header>
+    <form class="upload-form" action="{{ url_for('main.nlp_upload') }}" method="post" enctype="multipart/form-data">
+        <label for="nlp_file" class="upload-label">Select a text dataset (CSV, TXT, or ZIP of TXT files)</label>
+        <div class="upload-dropzone" data-dropzone>
+            <input id="nlp_file" class="upload-dropzone__input" type="file" name="nlp_file" accept=".csv,.txt,.zip" required>
+            <label for="nlp_file" class="upload-dropzone__label">
+                <span class="upload-dropzone__icon" aria-hidden="true"></span>
+                <span class="upload-dropzone__meta">
+                    <strong>Choose a file</strong>
+                    <small>or drag & drop here</small>
+                </span>
+            </label>
+        </div>
+        <div class="action-row action-row--compact">
+            <button class="primary" type="submit">Upload text data</button>
+        </div>
+    </form>
+    {% if uploaded %}
+    <div class="meta-grid">
+        <div>
+            <span class="meta-label">Original file</span>
+            <span class="meta-value">{{ uploaded.original_filename }}</span>
+        </div>
+        <div>
+            <span class="meta-label">Rows detected</span>
+            <span class="meta-value">{{ uploaded.rows }}</span>
+        </div>
+        <div>
+            <span class="meta-label">Columns</span>
+            <span class="meta-value">
+                {% if uploaded.columns %}
+                    {{ uploaded.columns | join(", ") }}
+                {% else %}
+                    —
+                {% endif %}
+            </span>
+        </div>
+        <div>
+            <span class="meta-label">Suggested text column</span>
+            <span class="meta-value">
+                {{ uploaded.suggested_text_column or "Select manually" }}
+            </span>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="panel">
+    <header class="panel__header">
+        <h2>Configure NLP Automation</h2>
+        <p class="muted">Clean, profile, vectorize, and optionally train a quick classifier on your text data.</p>
+    </header>
+    <form class="project-form" method="post" action="{{ url_for('main.run_nlp_automation') }}">
+        <div class="form-grid">
+            <label>
+                Text column
+                <select name="text_column" {% if not nlp.available_columns %}disabled{% endif %} required>
+                    <option value="">Select</option>
+                    {% for column in nlp.available_columns %}
+                        {% set selected = "" %}
+                        {% if uploaded.get('text_column') == column %}
+                            {% set selected = "selected" %}
+                        {% elif not uploaded.get('text_column') and uploaded.get('suggested_text_column') == column %}
+                            {% set selected = "selected" %}
+                        {% endif %}
+                        <option value="{{ column }}" {{ selected }}>{{ column }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Label column (optional)
+                <select name="label_column" {% if not nlp.available_columns %}disabled{% endif %}>
+                    <option value="">None</option>
+                    {% for column in nlp.label_columns %}
+                        {% set selected = "" %}
+                        {% if uploaded.get('label_column') == column %}
+                            {% set selected = "selected" %}
+                        {% endif %}
+                        <option value="{{ column }}" {{ selected }}>{{ column }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+
+        <div class="form-grid">
+            <label>
+                <input type="checkbox" name="remove_stopwords" {% if options.remove_stopwords is undefined or options.remove_stopwords %}checked{% endif %}>
+                <span>Remove common stopwords</span>
+            </label>
+            <label>
+                <input type="checkbox" name="lemmatize" {% if options.lemmatize is undefined or options.lemmatize %}checked{% endif %}>
+                <span>Apply lemmatization</span>
+            </label>
+            <label>
+                Max TF-IDF features
+                <input type="number" name="max_features" min="100" max="20000" step="100"
+                       value="{{ options.max_features or 5000 }}">
+            </label>
+        </div>
+
+        <label>
+            Profiling sample size (optional)
+            <input type="number" name="sample_size" min="50" step="50" placeholder="Auto"
+                   value="{{ options.sample_size or '' }}">
+        </label>
+
+        <div class="action-row">
+            <button class="primary" type="submit" {% if not nlp.available_columns %}disabled{% endif %}>
+                Run NLP Automation
+            </button>
+            <p class="muted">Pipeline: upload &rarr; preprocessing &rarr; profiling &rarr; TF-IDF &rarr; quick classification (if labels).</p>
+        </div>
+    </form>
+</section>
+
+{% if nlp.messages %}
+<section class="panel panel--accent">
+    <h2>Run summary</h2>
+    <ul class="pill-list">
+        {% for message in nlp.messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+{% if nlp.samples %}
+<section class="panel">
+    <header class="panel__header">
+        <h2>Preprocessing preview</h2>
+        <p class="muted">Sample before/after pairs showing normalization, stopword removal, and lemmatization.</p>
+    </header>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Original</th>
+                <th>Cleaned</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sample in nlp.samples %}
+            <tr>
+                <td>{{ sample.original }}</td>
+                <td>{{ sample.cleaned }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endif %}
+
+{% if nlp.profiling %}
+<section class="panel">
+    <header class="panel__header">
+        <h2>Text profiling</h2>
+        <p class="muted">Corpus-level statistics for the cleaned documents.</p>
+    </header>
+    <div class="stat-card-grid">
+        <article class="stat-card">
+            <span class="stat-label">Documents processed</span>
+            <span class="stat-value">{{ nlp.profiling.documents }}</span>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Empty / missing</span>
+            <span class="stat-value">{{ nlp.profiling.empty }}</span>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Avg word count</span>
+            <span class="stat-value">{{ nlp.profiling.average_word_count | round(1) }}</span>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Median word count</span>
+            <span class="stat-value">{{ nlp.profiling.median_word_count | round(1) }}</span>
+        </article>
+        <article class="stat-card">
+            <span class="stat-label">Vocabulary size</span>
+            <span class="stat-value">{{ nlp.profiling.vocabulary_size }}</span>
+        </article>
+    </div>
+
+    <div class="grid-two">
+        <article>
+            <h3>Top words</h3>
+            <ol class="ranked-list">
+                {% for item in nlp.profiling.top_words %}
+                    <li>{{ item.term }} <span class="muted">({{ item.count }})</span></li>
+                {% endfor %}
+            </ol>
+        </article>
+        <article>
+            <h3>Top bigrams</h3>
+            <ol class="ranked-list">
+                {% for item in nlp.profiling.top_bigrams %}
+                    <li>{{ item.term }} <span class="muted">({{ item.count }})</span></li>
+                {% endfor %}
+            </ol>
+        </article>
+    </div>
+
+    <div class="length-distribution">
+        <h3>Length distribution</h3>
+        <ul class="pill-list">
+            {% for bucket in nlp.profiling.length_distribution %}
+                <li>{{ bucket.bucket }}: {{ bucket.count }}</li>
+            {% endfor %}
+        </ul>
+        <p class="muted">Sample size used for profiling: {{ nlp.profiling.sampled_documents }}</p>
+    </div>
+</section>
+{% endif %}
+
+{% if nlp.feature_summary %}
+<section class="panel">
+    <header class="panel__header">
+        <h2>TF-IDF feature extraction</h2>
+        <p class="muted">Documents converted into numeric vectors for downstream modeling.</p>
+    </header>
+    <ul class="pill-list">
+        <li>Documents vectorized: {{ nlp.feature_summary.documents }}</li>
+        <li>Feature count: {{ nlp.feature_summary.feature_count }}</li>
+        <li>Max feature constraint: {{ nlp.feature_summary.max_features }}</li>
+        <li>Sparsity: {{ (nlp.feature_summary.sparsity * 100) | round(1) }}%</li>
+    </ul>
+</section>
+{% endif %}
+
+{% if nlp.model_summary %}
+<section class="panel">
+    <header class="panel__header">
+        <h2>Quick classification</h2>
+        <p class="muted">A lightweight baseline is trained when labels are supplied.</p>
+    </header>
+    {% if nlp.model_summary.status == "trained" %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Accuracy</td><td>{{ nlp.model_summary.accuracy | round(3) }}</td></tr>
+                <tr><td>Precision</td><td>{{ nlp.model_summary.precision | round(3) }}</td></tr>
+                <tr><td>Recall</td><td>{{ nlp.model_summary.recall | round(3) }}</td></tr>
+                <tr><td>F1-score</td><td>{{ nlp.model_summary.f1 | round(3) }}</td></tr>
+                <tr><td>Train size</td><td>{{ nlp.model_summary.train_size }}</td></tr>
+                <tr><td>Test size</td><td>{{ nlp.model_summary.test_size }}</td></tr>
+            </tbody>
+        </table>
+        {% if nlp.model_summary.confusion_matrix %}
+        <div class="confusion-matrix">
+            <h3>Confusion matrix</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Actual \ Predicted</th>
+                        {% for label in nlp.model_summary.confusion_matrix.labels %}
+                            <th>{{ label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in nlp.model_summary.confusion_matrix.matrix %}
+                    {% set actual = nlp.model_summary.confusion_matrix.labels[loop.index0] %}
+                    <tr>
+                        <td>{{ actual }}</td>
+                        {% for value in row %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    {% else %}
+        <p class="muted">{{ nlp.model_summary.message }}</p>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if nlp.downloads %}
+<section class="panel">
+    <header class="panel__header">
+        <h2>Downloads</h2>
+        <p class="muted">Artifacts are also available from the global download menu.</p>
+    </header>
+    {% set labels = {
+        "cleaned": "Cleaned text CSV",
+        "profile": "Profile summary (JSON)",
+        "features": "TF-IDF features (NPZ)",
+        "vectorizer": "TF-IDF vectorizer (PKL)",
+        "model": "Classifier (PKL)"
+    } %}
+    <div class="action-row action-row--spaced">
+        {% for key, artifact_id in nlp.downloads.items() %}
+            {% set artifact = lookup.get(artifact_id) %}
+            {% if artifact %}
+                <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifact_id) }}">
+                    {{ labels.get(key, key|title) }}
+                    {% if artifact.size %}<span class="muted">({{ artifact.size }})</span>{% endif %}
+                </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

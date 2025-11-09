@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if page.profile %}
+<section class="profiling-section">
+    <h2>Schema</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Column</th>
+                <th>Type</th>
+                <th>Semantic</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for column in page.profile.schema %}
+            <tr>
+                <td>{{ column.name }}</td>
+                <td>{{ column.dtype }}</td>
+                <td>{{ column.semantic }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<section class="profiling-section">
+    <h2>Statistics</h2>
+    <div class="grid-two">
+        <article>
+            <h3>Numeric</h3>
+            <ul>
+                {% for stat in page.profile.numeric_stats %}
+                    <li><strong>{{ stat.label }}</strong> | {{ stat.summary }}</li>
+                {% endfor %}
+                {% if not page.profile.numeric_stats %}
+                    <li>No numeric columns detected.</li>
+                {% endif %}
+            </ul>
+        </article>
+        <article>
+            <h3>Categorical</h3>
+            <ul>
+                {% for stat in page.profile.categorical_stats %}
+                    <li><strong>{{ stat.label }}</strong> | {{ stat.summary }}</li>
+                {% endfor %}
+                {% if not page.profile.categorical_stats %}
+                    <li>No categorical columns detected.</li>
+                {% endif %}
+            </ul>
+        </article>
+    </div>
+</section>
+
+<section class="profiling-section">
+    <h2>Data quality</h2>
+    <div class="grid-two">
+        <article>
+            <h3>Missing values</h3>
+            <ul>
+                {% for name, pct in page.profile.missing.items() %}
+                    <li>{{ name }}: {{ pct }}</li>
+                {% endfor %}
+                {% if not page.profile.missing %}
+                    <li>No missing values detected.</li>
+                {% endif %}
+            </ul>
+            <h3>Duplicates</h3>
+            <p>{{ page.profile.duplicates }} duplicate records</p>
+        </article>
+        <article>
+            <h3>Outliers</h3>
+            <p>{{ page.profile.outliers }} potential outliers flagged</p>
+            <h3>Visual assets</h3>
+            <ul class="pill-list">
+                {% for visual in page.profile.visuals %}
+                    <li>{{ visual }}</li>
+                {% endfor %}
+            </ul>
+        </article>
+    </div>
+</section>
+{% else %}
+<section class="profiling-section">
+    <p>No profiling results yet. Run Auto Mode to generate schema and statistics.</p>
+</section>
+{% endif %}
+{% endblock %}

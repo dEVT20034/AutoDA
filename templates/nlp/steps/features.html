@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block">
+    <header>
+        <h3>Feature Selection (TF-IDF)</h3>
+        <p class="muted">AutoDA vectorizes your cleaned text using TF-IDF (unigrams + bigrams). Adjust the feature budget to balance fidelity vs. performance.</p>
+    </header>
+
+    <article class="nlp-panel">
+        {% set can_extract = job.cleaned_path %}
+        {% if can_extract %}
+            <form action="{{ url_for('nlp.build_features') }}" method="post" class="stacked-form">
+                <label>
+                    Max TF-IDF features
+                    <input type="number" name="max_features" min="1000" max="20000" step="500" value="{{ job.feature_summary.max_features if job.feature_summary else 5000 }}">
+                </label>
+                <button class="primary" type="submit">Extract TF-IDF</button>
+            </form>
+        {% else %}
+            <p class="muted">Complete preprocessing and profiling to unlock feature extraction.</p>
+        {% endif %}
+        {% if job.feature_summary %}
+            <p class="muted">
+                Generated {{ job.feature_summary.feature_count }} features across {{ job.feature_summary.documents }} documents.
+                Sparsity: {{ (job.feature_summary.sparsity * 100) | round(1) }}%
+            </p>
+        {% endif %}
+    </article>
+
+    <article class="nlp-panel">
+        <h4>Artifacts</h4>
+        {% if job.feature_summary %}
+            <ul class="artifact-list">
+                <li>
+                    <div>
+                        <strong>TF-IDF Features</strong>
+                        <small>Matrix (.npz)</small>
+                    </div>
+                    <span class="muted">Stored locally</span>
+                </li>
+                <li>
+                    <div>
+                        <strong>TF-IDF Vectorizer</strong>
+                        <small>Pickle (.pkl)</small>
+                    </div>
+                    <span class="muted">Stored locally</span>
+                </li>
+            </ul>
+        {% else %}
+            <p class="muted">Run extraction to generate reusable feature matrices and the paired vectorizer.</p>
+        {% endif %}
+    </article>
+</section>
+
+{% set features_ready = job.feature_summary %}
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('nlp.automation_stage') }}">Back to profiling</a>
+    <a class="primary" href="{% if features_ready %}{{ url_for('nlp.split') }}{% else %}#{% endif %}"
+       {% if not features_ready %}aria-disabled="true" tabindex="-1"{% endif %}>
+        Continue to Split &amp; Validation
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ project.project_name }} | {{ page.title }} | AutoDA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_head %}{% endblock %}
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+</head>
+<body class="layout layout--aurora">
+{% block sidebar %}
+<aside class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+        <img src="{{ url_for('static', filename='img/autoda-logo.svg') }}" alt="AutoDA logo" class="brand__logo">
+        <div>
+            <span class="brand__name">AutoDA</span>
+            <span class="brand__tagline">Drop data. Get clarity.</span>
+        </div>
+    </div>
+    <nav class="sidebar__nav">
+        <ul>
+            {% for item in nav_items %}
+            <li>
+                <a href="{{ url_for(item.endpoint) }}"
+                   class="sidebar__link {% if active_endpoint in item.endpoint %}is-active{% endif %}">
+                    <span>{{ item.name }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    <footer class="sidebar__footer">
+        <button type="button" class="sidebar__glow">Night Shift</button>
+    </footer>
+</aside>
+{% endblock %}
+
+<div class="main-column">
+    {% block hero %}
+    <header class="page-hero">
+        <div class="page-hero__background" aria-hidden="true"></div>
+        <div class="page-hero__primary">
+            <div class="breadcrumbs" aria-label="Breadcrumb">
+                {% for crumb in page.breadcrumbs %}
+                    {% if crumb.endpoint %}
+                        <a href="{{ url_for(crumb.endpoint) }}">{{ crumb.label }}</a>
+                        <span aria-hidden="true">/</span>
+                    {% else %}
+                        <span class="current">{{ crumb.label }}</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="page-title">
+                <h1>{{ page.title }}</h1>
+                <p>{{ page.help }}</p>
+            </div>
+        </div>
+        {% block hero_meta %}
+        <div class="page-hero__meta">
+            <div class="hero-stat">
+                <span class="status-label">Current step</span>
+                <span class="status-value">{{ page.current_step }}</span>
+            </div>
+            <div class="hero-stat">
+                <span class="status-label">Last action</span>
+                <span class="status-value">{{ project.last_action or "n/a" }}</span>
+            </div>
+            <div class="hero-stat">
+                <span class="status-label">Data quality</span>
+                <span class="status-value">
+                    {% if project.data_quality.raw is none and project.data_quality.cleaned is none %}
+                        Not scored
+                    {% elif project.data_quality.cleaned is none %}
+                        Raw {{ project.data_quality.raw }}
+                    {% else %}
+                        Raw {{ project.data_quality.raw or "n/a" }} -> Cleaned {{ project.data_quality.cleaned or "n/a" }}
+                    {% endif %}
+                </span>
+            </div>
+            <div class="hero-stat">
+                <span class="status-label">Artifacts</span>
+                <span class="status-value">
+                    {% if artifacts %}
+                        {{ artifacts|length }} ready
+                    {% else %}
+                        None yet
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% endblock %}
+        <div class="page-hero__actions">
+            <div class="download-menu">
+                <button type="button" class="download-menu__button" aria-haspopup="listbox">
+                    <span>Download</span>
+                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 14l-4-4h8l-4 4z" /></svg>
+                </button>
+                <ul class="download-menu__list" role="listbox">
+                    {% for option in download_options %}
+                        <li><a href="{{ option.path }}">{{ option.label }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="page-hero__spark">
+                <span class="spark-label">Data stays private • Audit ready</span>
+            </div>
+            <form class="logout-form" action="{{ url_for('main.logout') }}" method="post">
+                <button type="submit">Sign out</button>
+            </form>
+        </div>
+    </header>
+    {% endblock %}
+
+    {% block pipeline %}
+        {% if not page.hide_pipeline %}
+        <section class="pipeline-progress" aria-label="Pipeline progress">
+            <ol class="pipeline-track">
+                {% for phase in pipeline_phases %}
+                    <li class="phase phase--{{ phase.status }}">
+                        <span class="phase__index">{{ loop.index }}</span>
+                        <span class="phase__label">{{ phase.name }}</span>
+                    </li>
+                {% endfor %}
+            </ol>
+        </section>
+        {% endif %}
+    {% endblock %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <section class="flash-container">
+                {% for category, message in messages %}
+                    <div class="flash flash--{{ category or 'info' }}">{{ message }}</div>
+                {% endfor %}
+            </section>
+        {% endif %}
+    {% endwith %}
+
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block collaboration %}
+    <section class="collaboration-strip" aria-label="Collaboration panel">
+        <div class="collaboration-strip__content">
+            <h2>Comments</h2>
+            <p>No comments yet. Share a note about this step for teammates.</p>
+        </div>
+        <div class="collaboration-strip__actions">
+            <button type="button" class="ghost">Add comment</button>
+            <button type="button" class="ghost">Copy view link</button>
+        </div>
+    </section>
+    {% endblock %}
+</div>
+
+{% block help_panel %}
+<aside class="help-panel" aria-label="Context help">
+    <section class="help-panel__section">
+        <h2>Context</h2>
+        <p>{{ page.help }}</p>
+    </section>
+    <section class="help-panel__section">
+        <h3>Audit trail</h3>
+        <ul class="audit-list">
+            {% for log in project.audit_trail[:8] %}
+                <li>
+                    <span class="audit-time">{{ log.time }}</span>
+                    <strong>{{ log.action }}</strong>
+                    <p>{{ log.detail }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+    <section class="help-panel__section">
+        <h3>Processing summary</h3>
+        <ul class="detail-list">
+            <li>Project: {{ project.project_name }}</li>
+            <li>Status: {{ project.status }}</li>
+            <li>Total time: {{ project.total_processing_time or "n/a" }}</li>
+        </ul>
+        <p class="privacy-hint">Data stays within this project. Adjust retention in Settings.</p>
+    </section>
+</aside>
+{% endblock %}
+</body>
+</html>

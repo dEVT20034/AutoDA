@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="prediction-overview">
+    <h2>Prediction sandbox</h2>
+    {% if page.prediction.available %}
+        <p>Model {{ page.prediction.model_version }} is ready. Upload a small batch to score.</p>
+    {% else %}
+        <p>No trained model yet. Run Auto Mode once a target column is configured.</p>
+    {% endif %}
+    <p>Target column: {{ page.prediction.target or "Not set" }}</p>
+</section>
+{% endblock %}

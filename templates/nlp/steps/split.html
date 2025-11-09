@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block">
+    <header>
+        <h3>Split &amp; Validation</h3>
+        <p class="muted">AutoDA performs an 80/20 stratified split when labels exist. Review the allocation before moving into model training.</p>
+    </header>
+
+    <article class="nlp-panel">
+        {% set summary = job.model_summary %}
+        {% if summary and summary.train_size %}
+            <ul class="pill-list pill-list--stacked">
+                <li>Train rows: {{ summary.train_size }}</li>
+                <li>Test rows: {{ summary.test_size }}</li>
+                <li>Validation strategy: Stratified hold-out (80/20)</li>
+            </ul>
+            <p class="muted">Class balance and leakage checks run automatically prior to training. Adjust the label column on the preprocessing step if alignment looks off.</p>
+        {% else %}
+            <p class="muted">Train a baseline model to populate split statistics and validation metrics.</p>
+        {% endif %}
+    </article>
+
+    <article class="nlp-panel">
+        <h4>Sample preview</h4>
+        {% if job.samples %}
+            <div class="nlp-sample">
+                {% for sample in job.samples %}
+                    <div class="sample-row">
+                        <div>
+                            <span>Original</span>
+                            <p>{{ sample.original }}</p>
+                        </div>
+                        <div>
+                            <span>Cleaned</span>
+                            <p>{{ sample.cleaned }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="muted">Preprocessing samples will appear here to remind you what enters the split.</p>
+        {% endif %}
+    </article>
+</section>
+
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('nlp.features') }}">Back to features</a>
+    <a class="primary" href="{{ url_for('nlp.training') }}">
+        Continue to Training &amp; Selection
+    </a>
+</div>
+{% endblock %}

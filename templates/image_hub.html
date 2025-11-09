@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/image_hub.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="panel panel--accent image-hub-intro">
+    <div class="panel__header">
+        <h2>Image Processing Hub</h2>
+        <p>Upload visuals, stack preprocessing steps, preview results, and export ready-to-train datasets without leaving the AutoDA workspace.</p>
+    </div>
+    <ul class="image-hub-highlights">
+        <li>Drag JPEG, PNG, TIFF, BMP, WebP, or GIF assets directly into the queue.</li>
+        <li>Layer 50+ preprocessing toggles with explainable defaults.</li>
+        <li>Auto Mode fabricates augmented datasets sized for your experiment.</li>
+    </ul>
+    {% if page.sample_sets %}
+    <div class="meta-grid image-hub-samples">
+        {% for sample in page.sample_sets %}
+            <div>
+                <span class="meta-label">{{ sample.label }}</span>
+                <span class="meta-value">{{ sample.count }} images @  {{ sample.size }}</span>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="action-row action-row--spaced">
+        <a class="ghost" href="{{ url_for('main.workflow') }}">Switch workflow</a>
+    </div>
+</section>
+
+<section class="image-hub-layout">
+    <article class="panel image-hub-panel image-hub-panel--upload">
+        <div class="panel__header">
+            <h3>Upload & queue</h3>
+            <p>All uploads stay within this project. Schema, metadata, and audit logs update automatically.</p>
+        </div>
+        <div id="upload-zone" class="image-hub-drop" role="button" tabindex="0">
+            <div class="upload-icon" aria-hidden="true">&#x2795;</div>
+            <p><strong>Drop images here</strong> or click to browse</p>
+            <input type="file" id="file-input" accept="image/*" multiple hidden>
+        </div>
+        <div class="image-hub-upload-actions">
+            <button class="primary soft" id="upload-trigger" type="button">Browse files</button>
+            <span class="muted tiny">Folders can be dragged directly from your desktop.</span>
+        </div>
+        <div class="image-hub-meta">
+            <span id="file-count">0 images</span>
+            <span id="total-size">0 MB</span>
+            <button class="ghost ghost--outline" id="clear-images" type="button">Clear all</button>
+        </div>
+        <div id="image-grid" class="image-hub-grid" aria-live="polite"></div>
+    </article>
+
+    <article class="panel image-hub-panel image-hub-panel--export">
+        <div class="panel__header">
+            <h3>Export & Auto Mode</h3>
+            <p>Download processed assets or let AutoDA fabricate an augmented dataset sized for your needs.</p>
+        </div>
+        <div class="image-hub-export">
+            <button id="download-selected" class="ghost ghost--outline" type="button">Download selected</button>
+            <button id="download-zip" class="primary" type="button">Download all as ZIP</button>
+        </div>
+        <div class="auto-mode-card">
+            <h4>Auto Mode dataset builder</h4>
+            <p class="muted">Choose a preset, resolution, and dataset size. AutoDA augments your uploads and hands back a ZIP.</p>
+            <div class="auto-mode-controls">
+                <label>
+                    <span>Images</span>
+                    <input type="number" id="auto-count" min="1" max="500" value="24">
+                </label>
+                <label>
+                    <span>Width</span>
+                    <input type="number" id="auto-width" min="64" max="2048" value="512">
+                </label>
+                <label>
+                    <span>Height</span>
+                    <input type="number" id="auto-height" min="64" max="2048" value="512">
+                </label>
+                <label>
+                    <span>Preset</span>
+                    <select id="auto-preset">
+                        <option value="balanced">Balanced</option>
+                        <option value="portrait">Portrait</option>
+                        <option value="document">Document</option>
+                        <option value="creative">Creative</option>
+                    </select>
+                </label>
+                <button id="auto-mode" class="primary" type="button">Run Auto Mode</button>
+            </div>
+        </div>
+    </article>
+</section>
+
+<section class="image-hub-layout">
+    <article class="panel image-hub-panel image-hub-panel--config">
+        <div class="panel__header">
+            <h3>Preprocessing lab</h3>
+            <p>Enable operations, fine-tune sliders, then apply to the current selection or the entire queue.</p>
+        </div>
+        <div class="image-hub-actions">
+            <button class="ghost ghost--outline" id="process-selected" type="button">Process selection</button>
+            <button class="ghost" id="reset-config" type="button">Reset</button>
+            <button class="primary" id="apply-all" type="button">Apply to all images</button>
+        </div>
+        <div class="image-hub-config">
+            <div class="config-section">
+                <h4>Basic transformations</h4>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="resize">
+                        <span>Resize (fit)</span>
+                    </label>
+                    <div class="control-row">
+                        <input type="number" placeholder="Width" data-param="resize.width" min="1">
+                        <input type="number" placeholder="Height" data-param="resize.height" min="1">
+                    </div>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="rotate">
+                        <span>Rotate (degrees)</span>
+                    </label>
+                    <input type="number" placeholder="0" data-param="rotate.angle">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="flip">
+                        <span>Flip</span>
+                    </label>
+                    <select data-param="flip.direction">
+                        <option value="horizontal">Horizontal</option>
+                        <option value="vertical">Vertical</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h4>Color adjustments</h4>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="brightness">
+                        <span>Brightness</span>
+                    </label>
+                    <input type="range" min="-50" max="50" value="0" data-param="brightness.value">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="contrast">
+                        <span>Contrast</span>
+                    </label>
+                    <input type="range" min="-50" max="50" value="0" data-param="contrast.value">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="saturation">
+                        <span>Saturation</span>
+                    </label>
+                    <input type="range" min="-50" max="50" value="0" data-param="saturation.value">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="temperature">
+                        <span>Temperature</span>
+                    </label>
+                    <input type="range" min="-50" max="50" value="0" data-param="temperature.value">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="tint">
+                        <span>Tint</span>
+                    </label>
+                    <input type="range" min="-50" max="50" value="0" data-param="tint.value">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="grayscale">
+                        <span>Grayscale</span>
+                    </label>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="tone_map">
+                        <span>Tone map</span>
+                    </label>
+                    <select data-param="tone_map.mode">
+                        <option value="soft">Soft</option>
+                        <option value="strong">Strong</option>
+                        <option value="hdr">HDR</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h4>Geometry</h4>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="crop">
+                        <span>Crop</span>
+                    </label>
+                    <div class="control-row">
+                        <input type="number" placeholder="X" data-param="crop.x" min="0">
+                        <input type="number" placeholder="Y" data-param="crop.y" min="0">
+                        <input type="number" placeholder="Width" data-param="crop.width" min="1">
+                        <input type="number" placeholder="Height" data-param="crop.height" min="1">
+                    </div>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="perspective">
+                        <span>Perspective warp</span>
+                    </label>
+                    <select data-param="perspective.mode">
+                        <option value="mild">Mild</option>
+                        <option value="strong">Strong</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="pad">
+                        <span>Pad / letterbox</span>
+                    </label>
+                    <div class="control-row">
+                        <input type="number" placeholder="Top" data-param="pad.top" min="0">
+                        <input type="number" placeholder="Bottom" data-param="pad.bottom" min="0">
+                        <input type="number" placeholder="Left" data-param="pad.left" min="0">
+                        <input type="number" placeholder="Right" data-param="pad.right" min="0">
+                    </div>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="border">
+                        <span>Border color</span>
+                    </label>
+                    <input type="color" data-param="border.color" value="#000000">
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h4>Filtering</h4>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="blur">
+                        <span>Blur</span>
+                    </label>
+                    <div class="control-row">
+                        <select data-param="blur.type">
+                            <option value="gaussian">Gaussian</option>
+                            <option value="median">Median</option>
+                            <option value="bilateral">Bilateral</option>
+                        </select>
+                        <input type="range" min="1" max="25" value="5" data-param="blur.strength">
+                    </div>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="sharpen">
+                        <span>Sharpen</span>
+                    </label>
+                    <select data-param="sharpen.level">
+                        <option value="light">Light</option>
+                        <option value="standard">Standard</option>
+                        <option value="strong">Strong</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="denoise">
+                        <span>Denoise</span>
+                    </label>
+                    <select data-param="denoise.method">
+                        <option value="nlm">Non-local means</option>
+                        <option value="median">Median</option>
+                        <option value="bilateral">Bilateral</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="edge">
+                        <span>Edge enhance</span>
+                    </label>
+                    <select data-param="edge.method">
+                        <option value="sobel">Sobel</option>
+                        <option value="laplacian">Laplacian</option>
+                        <option value="canny">Canny</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h4>Augmentation</h4>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="noise">
+                        <span>Add noise</span>
+                    </label>
+                    <input type="range" min="0" max="40" value="0" data-param="noise.amount">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="gamma">
+                        <span>Gamma</span>
+                    </label>
+                    <input type="range" min="0.1" max="4" step="0.1" value="1" data-param="gamma.value">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="solarize">
+                        <span>Solarize</span>
+                    </label>
+                    <input type="number" min="0" max="255" value="128" data-param="solarize.threshold">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="posterize">
+                        <span>Posterize</span>
+                    </label>
+                    <input type="number" min="2" max="8" value="4" data-param="posterize.bits">
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="channel_shift">
+                        <span>Channel shift</span>
+                    </label>
+                    <select data-param="channel_shift.mode">
+                        <option value="rgb">RGB</option>
+                        <option value="hsv">HSV</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label class="toggle">
+                        <input type="checkbox" data-op="clahe">
+                        <span>CLAHE</span>
+                    </label>
+                    <div class="control-row">
+                        <input type="number" step="0.1" placeholder="Clip limit" data-param="clahe.clip_limit">
+                        <input type="number" placeholder="Tile grid" data-param="clahe.tile_grid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article class="panel image-hub-panel image-hub-panel--preview">
+        <div class="panel__header">
+            <h3>Preview & metrics</h3>
+            <p>Compare originals with processed outputs. Navigate through the queue and inspect PSNR/SSIM.</p>
+        </div>
+        <div class="image-hub-preview-head">
+            <button id="prev-image" class="ghost" type="button">Previous</button>
+            <span id="preview-index">0 / 0</span>
+            <button id="next-image" class="ghost" type="button">Next</button>
+        </div>
+        <div class="image-hub-preview" id="preview">
+            <figure>
+                <figcaption>Original</figcaption>
+                <img id="original-preview" alt="Original preview">
+            </figure>
+            <figure>
+                <figcaption>Processed</figcaption>
+                <img id="processed-preview" alt="Processed preview">
+            </figure>
+        </div>
+        <div class="image-hub-metrics">
+            <div>
+                <span class="metric-label">PSNR</span>
+                <span id="metric-psnr">&mdash;</span>
+            </div>
+            <div>
+                <span class="metric-label">SSIM</span>
+                <span id="metric-ssim">&mdash;</span>
+            </div>
+        </div>
+        <p id="auto-result" class="auto-result auto-result--preview" hidden>
+            <span id="auto-result-text"></span>
+            <a id="auto-result-link" class="ghost ghost--outline" href="#" download>Download dataset</a>
+        </p>
+    </article>
+</section>
+
+<div class="loading-overlay" id="loading-overlay" hidden>
+    <div class="spinner"></div>
+    <p id="loading-message">Processing...</p>
+</div>
+
+<script>
+    window.IMAGE_HUB_CONFIG = {
+        uploadUrl: "{{ url_for('main.image_hub_upload') }}",
+        processUrl: "{{ url_for('main.image_hub_process') }}",
+        downloadUrl: "{{ url_for('main.image_hub_download') }}",
+        autoUrl: "{{ url_for('main.image_hub_auto_mode') }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='js/image_hub.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="visualization-actions">
+    <form action="{{ url_for('main.generate_visualizations') }}" method="post">
+        <button type="submit" class="primary">Generate visualizations</button>
+    </form>
+    {% if page.has_visualizations %}
+        <p class="muted">Charts below reflect the latest analysis. Re-run after new preprocessing or Auto Mode.</p>
+    {% else %}
+        <p class="muted">Run Auto Mode or click the button to produce histograms, box plots, scatter plots, and correlation heatmaps.</p>
+    {% endif %}
+</section>
+
+{% if page.has_visualizations %}
+<section class="visualization-controls">
+    <h2>Filters</h2>
+    <ul class="pill-list">
+        {% if page.filters %}
+            {% for control in page.filters %}
+                <li>{{ control }}</li>
+            {% endfor %}
+        {% else %}
+            <li>No filters available</li>
+        {% endif %}
+    </ul>
+    {% if page.plot_links %}
+        <div class="plot-links">
+            <span class="muted">Jump to:</span>
+            <ul class="pill-list">
+                {% for item in page.plot_links %}
+                    <li><a href="#{{ item.anchor }}">{{ item.label }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<section class="visualization-gallery">
+    <h2>Visualizations</h2>
+    {% if page.plots %}
+        {% for plot in page.plots %}
+            <section class="visual-subsection" id="vis-{{ loop.index }}">
+                <header class="visual-subsection__header">
+                    <h3>{{ plot.name }}</h3>
+                </header>
+                {% if plot.description %}
+                    <p class="muted">{{ plot.description }}</p>
+                {% endif %}
+                {% if plot.insights %}
+                    <ul class="insight-list">
+                        {% for insight in plot.insights %}
+                            <li>{{ insight }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="visual-embed">
+                    {{ plot.html|safe }}
+                </div>
+            </section>
+        {% endfor %}
+    {% else %}
+        <p>No visualizations yet. Run Auto Mode or use the button above to generate charts for this dataset.</p>
+    {% endif %}
+</section>
+{% endblock %}

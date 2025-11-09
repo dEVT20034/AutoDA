@@ -1,0 +1,40 @@
+<section class="nlp-meta-grid">
+    <article>
+        <span class="stat-label">Dataset</span>
+        <strong>{{ job.raw_filename or "Not uploaded yet" }}</strong>
+    </article>
+    <article>
+        <span class="stat-label">Columns detected</span>
+        <strong>{{ job.columns|length }}</strong>
+    </article>
+    <article>
+        <span class="stat-label">Text column</span>
+        <strong>{{ job.text_column or "Not set" }}</strong>
+    </article>
+    <article>
+        <span class="stat-label">Label column</span>
+        <strong>{{ job.label_column or "None" }}</strong>
+    </article>
+    <article>
+        <span class="stat-label">Profiling</span>
+        <strong>{{ "Ready" if job.profiling else "Pending" }}</strong>
+    </article>
+    <article>
+        <span class="stat-label">Features</span>
+        <strong>{{ job.feature_summary.feature_count if job.feature_summary else "Pending" }}</strong>
+    </article>
+    <article>
+        <span class="stat-label">Model status</span>
+        <strong>
+            {% if job.model_summary %}
+                {{ job.model_summary.status|default("Pending")|replace("_", " ")|title }}
+            {% else %}
+                Pending
+            {% endif %}
+        </strong>
+    </article>
+    <article>
+        <span class="stat-label">Artifacts</span>
+        <strong>{{ job.artifacts|length }}</strong>
+    </article>
+</section>

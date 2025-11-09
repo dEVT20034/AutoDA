@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="upload-panel">
+    <h2>Upload a dataset</h2>
+    <form class="upload-form" action="{{ url_for('main.ingestion') }}" method="post" enctype="multipart/form-data">
+        <label for="data_file" class="upload-label">Select a tabular file (CSV, TSV, Excel)</label>
+        <div class="upload-dropzone" data-dropzone>
+            <input id="data_file" class="upload-dropzone__input" type="file" name="data_file" accept=".csv,.tsv,.txt,.xlsx,.xls" required>
+            <label for="data_file" class="upload-dropzone__label">
+                <span class="upload-dropzone__icon" aria-hidden="true"></span>
+                <span class="upload-dropzone__meta">
+                    <strong>Choose a file</strong>
+                    <small>or drag & drop here</small>
+                </span>
+            </label>
+        </div>
+        <div class="action-row">
+            <button type="submit" class="primary">Upload file</button>
+        </div>
+    </form>
+    <p class="muted">Data stays within this session. Uploads are stored locally under <code>uploads/</code>.</p>
+</section>
+
+<section class="upload-support">
+    <h2>Supported sources</h2>
+    <div class="grid-two">
+        {% for category, formats in page.upload_support.items() %}
+            <article>
+                <h3>{{ category }}</h3>
+                <ul>
+                    {% for item in formats %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% if page.dataset_summary %}
+<section class="ingestion-metrics">
+    <h2>Uploaded dataset</h2>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Rows</th>
+                <th>Columns</th>
+                <th>Size</th>
+                <th>Uploaded</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dataset in page.dataset_summary %}
+                <tr>
+                    <td>{{ dataset.filename }}</td>
+                    <td>{{ dataset.rows }}</td>
+                    <td>{{ dataset.columns }}</td>
+                    <td>{{ dataset.size }}</td>
+                    <td>{{ dataset.uploaded_at }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="metric-grid">
+        <div>
+            <span class="metric-label">Detected modalities</span>
+            <span class="metric-value">
+                {% if page.detected_modalities %}
+                    {{ page.detected_modalities | join(", ") }}
+                {% else %}
+                    Not detected
+                {% endif %}
+            </span>
+        </div>
+        <div>
+            <span class="metric-label">Initial quality</span>
+            <span class="metric-value">
+                {% if page.metrics.quality_score is not none %}
+                    {{ page.metrics.quality_score }}
+                {% else %}
+                    n/a
+                {% endif %}
+            </span>
+        </div>
+        <div>
+            <span class="metric-label">Rows</span>
+            <span class="metric-value">
+                {% if page.metrics.rows is not none %}
+                    {{ "{:,}".format(page.metrics.rows) }}
+                {% else %}
+                    n/a
+                {% endif %}
+            </span>
+        </div>
+        <div>
+            <span class="metric-label">Columns</span>
+            <span class="metric-value">
+                {% if page.metrics.columns is not none %}
+                    {{ page.metrics.columns }}
+                {% else %}
+                    n/a
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="preprocess-actions">
+    <h2>Preprocessing</h2>
+    <p>Run automated profiling and cleaning on the uploaded dataset before moving to modeling.</p>
+    <div class="action-row">
+        <form action="{{ url_for('main.preprocess') }}" method="post">
+            <button type="submit" class="primary">Run Preprocessing</button>
+        </form>
+        {% if page.cleaned_artifact %}
+            <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=page.cleaned_artifact.id) }}">
+                Download cleaned data{% if page.cleaned_artifact.size %} ({{ page.cleaned_artifact.size }}){% endif %}
+            </a>
+        {% endif %}
+    </div>
+    {% if page.cleaned_artifact %}
+        <p class="muted">Last generated {{ page.cleaned_artifact.timestamp }}</p>
+    {% endif %}
+</section>
+
+<section class="target-config">
+    <h2>Target configuration</h2>
+    {% if page.target_options %}
+        <form class="target-form" action="{{ url_for('main.set_target') }}" method="post">
+            <label for="target_column">Select target column (optional)</label>
+            <div class="target-select">
+                <select id="target_column" name="target_column">
+                    <option value="" {% if not page.target_column %}selected{% endif %}>No target (unsupervised)</option>
+                    {% for option in page.target_options %}
+                        <option value="{{ option.value }}" {% if option.value == page.target_column %}selected{% endif %}>
+                            {{ option.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13.5l-5-5h10l-5 5z" /></svg>
+            </div>
+            <div class="action-row action-row--compact">
+                <button type="submit" class="ghost">Update target</button>
+            </div>
+        </form>
+    {% else %}
+        <p>No schema detected yet. Run Auto Mode to profile the dataset.</p>
+    {% endif %}
+    <form action="{{ url_for('main.auto_mode') }}" method="post" class="auto-mode-form">
+        <button type="submit" class="primary">Run Auto Mode</button>
+    </form>
+</section>
+{% endif %}
+{% endblock %}

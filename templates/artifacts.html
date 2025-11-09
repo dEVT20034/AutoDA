@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="artifact-list">
+    <h2>Generated artifacts</h2>
+    {% if page.artifacts %}
+    <div class="artifact-gallery">
+        {% for artifact in page.artifacts %}
+            {% set display_name = artifact.name %}
+            {% if artifact.name.endswith('_analytics_report.pdf') %}
+                {% set display_name = 'Analytics Report' %}
+            {% elif artifact.name.endswith('_cleaned.csv') %}
+                {% set display_name = 'Cleaned Dataset' %}
+            {% elif artifact.name.endswith('_encoded.csv') %}
+                {% set display_name = 'Encoded Dataset' %}
+            {% elif artifact.name.endswith('_train.csv') %}
+                {% set display_name = 'Train Split' %}
+            {% elif artifact.name.endswith('_test.csv') %}
+                {% set display_name = 'Test Split' %}
+            {% elif artifact.name.endswith('_predictions.csv') %}
+                {% set display_name = 'Predictions' %}
+            {% elif artifact.type %}
+                {% set display_name = artifact.type %}
+            {% endif %}
+            <article class="artifact-card">
+                <header class="artifact-card__header">
+                    <h3>{{ display_name }}</h3>
+                    <span class="artifact-card__badge">{{ artifact.type }}</span>
+                </header>
+                <ul class="artifact-card__meta">
+                    <li><strong>Size:</strong> {{ artifact.size }}</li>
+                    <li><strong>Created:</strong> {{ artifact.timestamp }}</li>
+                </ul>
+                <p class="artifact-card__description">{{ artifact.description }}</p>
+                <div class="artifact-card__actions">
+                    {% if artifact.path %}
+                        <a class="ghost" href="{{ url_for('main.download_artifact', artifact_id=artifact.id) }}">Download</a>
+                    {% elif artifact.link %}
+                        <a class="ghost" href="{{ artifact.link }}">Download</a>
+                    {% else %}
+                        <span class="muted">Pending</span>
+                    {% endif %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No artifacts yet. Run Auto Mode to generate outputs.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "nlp/_meta_overview.html" %}
+
+<section class="nlp-stage-block" id="stage-automation">
+    <header>
+        <h3>NLP Automation &amp; Profiling</h3>
+        <p class="muted">Generate quick corpus analytics to understand document counts, vocabulary, and length distributions before feature work.</p>
+    </header>
+
+    <article class="nlp-panel">
+        <form action="{{ url_for('nlp.profile_text') }}" method="post" class="action-row">
+            {% set can_profile = job.cleaned_path %}
+            <button class="ghost ghost--accent" type="submit" {% if not can_profile %}disabled{% endif %}>
+                Generate profiling
+            </button>
+            {% if not can_profile %}
+                <span class="muted">Run preprocessing first.</span>
+            {% endif %}
+        </form>
+        {% if job.profiling %}
+            <div class="stat-card-grid">
+                <article class="stat-card"><span class="stat-label">Documents</span><span class="stat-value">{{ job.profiling.documents }}</span></article>
+                <article class="stat-card"><span class="stat-label">Empty</span><span class="stat-value">{{ job.profiling.empty }}</span></article>
+                <article class="stat-card"><span class="stat-label">Avg words</span><span class="stat-value">{{ job.profiling.average_word_count | round(1) }}</span></article>
+                <article class="stat-card"><span class="stat-label">Median words</span><span class="stat-value">{{ job.profiling.median_word_count | round(1) }}</span></article>
+            </div>
+            <div class="helper-grid">
+                <div class="helper-block">
+                    <strong>Top words</strong>
+                    <ul>
+                        {% for item in job.profiling.top_words %}
+                            <li>{{ item.term }} ({{ item.count }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="helper-block">
+                    <strong>Top bigrams</strong>
+                    <ul>
+                        {% for item in job.profiling.top_bigrams %}
+                            <li>{{ item.term }} ({{ item.count }})</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="helper-block">
+                    <strong>Length distribution</strong>
+                    <ul>
+                        {% for bucket in job.profiling.length_distribution %}
+                            <li>{{ bucket.bucket }} &mdash; {{ bucket.count }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% else %}
+            <p class="muted">Profiling results will appear here, including vocabulary size, top n-grams, and text length distribution.</p>
+        {% endif %}
+    </article>
+</section>
+
+{% set profiling_ready = job.profiling %}
+<div class="action-row action-row--spaced">
+    <a class="ghost" href="{{ url_for('nlp.preprocessing') }}">Back to preprocessing</a>
+    <a class="primary" href="{% if profiling_ready %}{{ url_for('nlp.features') }}{% else %}#{% endif %}"
+       {% if not profiling_ready %}aria-disabled="true" tabindex="-1"{% endif %}>
+        Continue to Feature Selection
+    </a>
+</div>
+{% endblock %}

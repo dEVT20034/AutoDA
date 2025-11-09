@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="project-intake">
+    <h2>Start a new project</h2>
+    <p class="muted">Capture the essentials so AutoDA can tailor the analytics journey for each workspace.</p>
+    <form method="post" class="project-form">
+        <input type="hidden" name="action" value="create">
+        <div class="form-grid">
+            <label>
+                Project name
+                <input type="text" name="project_name" required placeholder="e.g., Customer Churn Insights">
+            </label>
+            <label>
+                Domain / industry
+                <input type="text" name="domain" placeholder="e.g., SaaS, Healthcare, Finance">
+            </label>
+            <label>
+                Primary stakeholders
+                <input type="text" name="stakeholders" placeholder="e.g., Growth Team, Product Analytics">
+            </label>
+            <label>
+                Target timeline
+                <input type="text" name="timeline" placeholder="e.g., 3 weeks">
+            </label>
+        </div>
+        <label>
+            Project description
+            <textarea name="project_description" rows="3" placeholder="Short overview of the business problem and success criteria."></textarea>
+        </label>
+        <label>
+            Dataset summary
+            <textarea name="data_sources" rows="3" placeholder="Source systems, formats, refresh cadence, size, notable quirks."></textarea>
+        </label>
+        <div class="modalities-group">
+            <span>Modalities included</span>
+            <div class="modalities-options">
+                {% for item in ["Tabular", "Text", "Image", "Audio", "Video"] %}
+                <label class="feature-toggle">
+                    <input type="checkbox" name="modalities" value="{{ item }}">
+                    <span class="feature-toggle__pill">
+                        <span class="feature-toggle__indicator" aria-hidden="true"></span>
+                        <span class="feature-toggle__label">{{ item }}</span>
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <label>
+            Analysis goals
+            <textarea name="analysis_goals" rows="3" placeholder="Key questions to answer, decisions to support."></textarea>
+        </label>
+        <label>
+            Success metrics
+            <textarea name="success_metrics" rows="2" placeholder="How success will be measured (e.g., uplift %, MAE)."></textarea>
+        </label>
+        <label>
+            Additional notes
+            <textarea name="project_notes" rows="2" placeholder="Constraints, compliance requirements, or follow-up actions."></textarea>
+        </label>
+        <div class="action-row action-row--compact">
+            <button type="submit" class="primary">Create project</button>
+        </div>
+    </form>
+</section>
+
+<section class="project-roster">
+    <h2>Existing projects</h2>
+    {% if page.projects %}
+        <div class="project-card-grid">
+            {% for proj in page.projects %}
+                <article class="project-card {% if proj.id == page.active_project %}is-active{% endif %}">
+                    <header>
+                        <h3>{{ proj.name }}</h3>
+                        <span class="project-card__status">{{ proj.status }}</span>
+                    </header>
+                    <p class="project-card__description">{{ proj.description }}</p>
+                    <ul class="project-card__meta">
+                        <li><strong>Phase:</strong> {{ proj.phase }}</li>
+                        <li><strong>Last action:</strong> {{ proj.last_action }}</li>
+                        <li><strong>Datasets:</strong> {{ proj.dataset_count }}</li>
+                        <li><strong>Artifacts:</strong> {{ proj.artifact_count }}</li>
+                    </ul>
+                    {% if proj.analysis %}
+                        <div class="project-card__analysis">
+                            <h4>Analysis requirements</h4>
+                            <ul>
+                                {% for key, value in proj.analysis.items() %}
+                                    <li>
+                                        <strong>{{ key.replace("_", " ")|title }}:</strong>
+                                        {% if value is iterable and value is not string %}
+                                            {{ value | join(", ") }}
+                                        {% else %}
+                                            {{ value }}
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="project-card__actions">
+                        <form method="post">
+                            <input type="hidden" name="action" value="switch">
+                            <input type="hidden" name="project_id" value="{{ proj.id }}">
+                            <button type="submit" class="ghost" {% if proj.id == page.active_project %}disabled{% endif %}>
+                                {% if proj.id == page.active_project %}Active workspace{% else %}Resume project{% endif %}
+                            </button>
+                        </form>
+                        {% if proj.id != page.active_project %}
+                        <form method="post" onsubmit="return confirm('Delete this project? This cannot be undone.');">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="project_id" value="{{ proj.id }}">
+                            <button type="submit" class="ghost danger">Delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">No projects yet. Use the form above to create your first AutoDA workspace.</p>
+    {% endif %}
+</section>
+{% endblock %}
