@@ -82,7 +82,6 @@ cap/
 │   ├── js/  (main.js, image_hub.js)
 │   └── assets/
 ├── uploads/                 # cleaned datasets, reports, web-scrape CSVs, image ZIPs
-├── tests/                   # automation smoke tests
 └── README.md
 ```
 
