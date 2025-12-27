@@ -190,7 +190,5 @@ Ensure `uploads/` is writable; Auto Mode and the scraper rely on it for artifact
 
 ## Need help?
 
-- Use the in-app contact form or email `support@autoda.example`.
+- Use the in-app contact form or email `devt28173@gmail.com`.
 - Contributions welcome—open issues or PRs for bugs, features, or UX polish.
-
-Happy automating! 🚀
